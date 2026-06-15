@@ -85,24 +85,12 @@
   .center{background:var(--bg);position:relative}
 
   /* ---- filmstrip / grid ---- */
-  .filters{display:flex;gap:4px;padding:9px 10px;border-bottom:1px solid var(--line);flex-wrap:wrap}
-  .chip{border:1px solid var(--line);background:transparent;color:var(--muted);
-    padding:4px 9px;border-radius:20px;font-size:11px;font-weight:600}
-  .chip.on{background:var(--panel-2);color:var(--ink);border-color:#3a4150}
   .thumbs{flex:1;overflow-y:auto;padding:8px;display:grid;
     grid-template-columns:1fr 1fr;gap:8px;align-content:start}
   .thumb{position:relative;border-radius:7px;overflow:hidden;cursor:pointer;
     aspect-ratio:3/2;background:var(--thumb-bg);border:2px solid transparent}
   .thumb.sel{border-color:var(--sel)}
   .thumb canvas{width:100%;height:100%;object-fit:cover;display:block}
-  .thumb .score{position:absolute;top:4px;left:4px;font-family:var(--mono);font-size:10px;
-    font-weight:700;padding:1px 5px;border-radius:5px;background:rgba(0,0,0,.62);backdrop-filter:blur(2px)}
-  .thumb .flag{position:absolute;top:4px;right:4px;width:16px;height:16px;border-radius:50%;
-    display:none;align-items:center;justify-content:center;font-size:10px;font-weight:800}
-  .thumb[data-flag="pick"] .flag{display:flex;background:var(--pick);color:#06301f}
-  .thumb[data-flag="reject"] .flag{display:flex;background:var(--reject);color:#3a0710}
-  .thumb .grp{position:absolute;bottom:4px;right:4px;font-family:var(--mono);font-size:9px;
-    color:var(--ink);background:rgba(0,0,0,.6);padding:0 4px;border-radius:4px}
   .thumb .nm{position:absolute;bottom:0;left:0;right:0;font-size:9px;color:var(--thumb-ink);
     padding:8px 5px 3px;background:linear-gradient(transparent,rgba(0,0,0,.8));
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -191,11 +179,6 @@
   .preset button{border:0;background:transparent;color:var(--muted);font-size:11px;font-weight:600;padding:3px 6px;border-radius:5px}
   .preset button:hover{color:var(--ink);background:var(--bg)}
   .mini{font-size:11px;color:var(--faint);padding:0 14px 12px;line-height:1.5}
-  .cull-panel{padding:14px}
-  .cull-panel p{color:var(--muted);font-size:12px;line-height:1.5;margin:0 0 12px}
-  .statline{display:flex;justify-content:space-between;font-family:var(--mono);font-size:11px;
-    color:var(--muted);padding:3px 0}
-  .statline b{color:var(--ink);font-weight:700}
   .hide{display:none!important}
   /* ---- export modal ---- */
   .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);
@@ -317,10 +300,6 @@
     </svg>
     WildmanDesigns <small>cull &amp; develop</small>
   </div>
-  <div class="modes">
-    <button id="mCull" class="on">Cull</button>
-    <button id="mEdit">Develop</button>
-  </div>
   <div class="spacer"></div>
   <select id="theme" class="themeSel" title="Theme">
     <option value="darkroom">Darkroom</option>
@@ -341,12 +320,6 @@
 <main>
   <!-- LEFT -->
   <div class="col left">
-    <div class="filters" id="filters">
-      <button class="chip on" data-f="all">All</button>
-      <button class="chip" data-f="pick">Picks</button>
-      <button class="chip" data-f="reject">Rejects</button>
-      <button class="chip" data-f="none">Unflagged</button>
-    </div>
     <div class="thumbs" id="thumbs"></div>
   </div>
 
@@ -375,8 +348,6 @@
       <button class="ghost" id="redoBtn" title="Redo (Ctrl+Y)" disabled>↷</button>
       <div class="spacer"></div>
       <button class="ghost" id="zoomBtn">Fit</button>
-      <button class="ghost" id="flagPick">Pick <kbd>P</kbd></button>
-      <button class="ghost" id="flagReject">Reject <kbd>X</kbd></button>
       <button class="ghost" id="beforeBtn">Before <kbd>B</kbd></button>
       <button class="ghost" id="cropBtn">Crop</button>
       <button class="ghost" id="spotBtn">Spot</button>
@@ -403,32 +374,7 @@
 
   <!-- RIGHT -->
   <div class="col right">
-    <!-- CULL panel -->
-    <div id="cullPanel" class="rscroll">
-      <div class="cull-panel">
-        <div class="grp-h" style="padding-left:0">Auto-cull</div>
-        <p>Score the whole batch on sharpness &amp; exposure, group near-duplicate frames,
-           and auto-flag the strongest shot in each group.</p>
-        <button class="btn amber" id="autoCull" style="width:100%;justify-content:center" disabled>Run auto-cull</button>
-        <div class="divider"></div>
-        <div class="statline"><span>Frames</span><b id="sTotal">0</b></div>
-        <div class="statline"><span>Picks</span><b id="sPick" style="color:var(--pick)">0</b></div>
-        <div class="statline"><span>Rejects</span><b id="sReject" style="color:var(--reject)">0</b></div>
-        <div class="statline"><span>Groups</span><b id="sGroups">0</b></div>
-        <div class="statline"><span>Avg score</span><b id="sAvg">—</b></div>
-        <div class="divider"></div>
-        <div class="grp-h" style="padding-left:0">Threshold</div>
-        <div class="slider" style="padding-left:0;padding-right:0">
-          <div class="top"><label>Reject below score</label><span class="val" id="thrVal">35</span></div>
-          <input type="range" id="thr" min="0" max="80" value="35">
-        </div>
-        <p style="font-size:11px;color:var(--faint)">Switch to <b>Develop</b> to edit the
-           selected frame. Selecting is non-destructive — your originals are untouched.</p>
-      </div>
-    </div>
-
-    <!-- EDIT panel -->
-    <div id="editPanel" class="rscroll hide">
+    <div id="editPanel" class="rscroll">
       <div class="histwrap"><canvas id="hist" width="268" height="64"></canvas>
         <div class="clip"><span id="clipS" title="Shadow clipping"></span><span id="clipH" title="Highlight clipping"></span></div>
       </div>
@@ -439,7 +385,6 @@
       <div class="syncrow">
         <button class="ghost" id="copySet">Copy</button>
         <button class="ghost" id="pasteSet">Paste</button>
-        <button class="ghost" id="syncPicks">Sync→Picks</button>
         <button class="ghost" id="syncAll">Sync→All</button>
       </div>
 
@@ -521,10 +466,6 @@
         <span class="opt-label">Current photo</span>
         <span class="opt-sub" id="expSelectedSub"></span>
       </button>
-      <button class="modal-opt" id="expPicks">
-        <span class="opt-label">All picks</span>
-        <span class="opt-sub" id="expPicksSub"></span>
-      </button>
       <button class="modal-opt" id="expAll">
         <span class="opt-label">Entire batch</span>
         <span class="opt-sub" id="expAllSub"></span>
@@ -580,11 +521,8 @@ const DEFAULT_ADJ = {
 const state = {
   photos: [],
   selId: null,
-  mode: 'cull',
-  filter: 'all',
   presets: [],
   showBefore: false,
-  rejectThreshold: 35,
   clipboard: null,
   activeMask: -1,
   view: {mode:'fit', panX:0, panY:0},
@@ -730,8 +668,8 @@ async function addFiles(files){
         ? await loadRawBitmap(f)
         : await createImageBitmap(f,{imageOrientation:'from-image'});
       const p={ id:uid++, name:f.name, bitmap:bmp, w:bmp.width, h:bmp.height,
-        adj:structuredClone(DEFAULT_ADJ), masks:[], spots:[], score:null, sharp:0, expo:0,
-        flag:'none', group:0, hash:null, thumb:document.createElement('canvas'),
+        adj:structuredClone(DEFAULT_ADJ), masks:[], spots:[],
+        thumb:document.createElement('canvas'),
         _undo:[], _redo:[] };
       makeThumb(p);
       state.photos.push(p);
@@ -1228,7 +1166,7 @@ function dot2(x,y,isSel){
 
 function drawOverlay(){
   octx.clearRect(0,0,overlay.width,overlay.height);
-  const p=sel(); if(!p||state.mode!=='edit') return;
+  const p=sel(); if(!p) return;
   if(state.cropMode){ drawCropOverlay(); return; }
   if(state.spotMode){ drawSpotOverlay(); return; }
   if(state.activeMask<0) return;
@@ -1276,84 +1214,6 @@ function drawOverlay(){
 }
 function dot(x,y){ octx.fillStyle='#fff'; octx.beginPath(); octx.arc(x,y,5,0,7); octx.fill();
   octx.strokeStyle='rgba(0,0,0,.5)'; octx.stroke(); octx.strokeStyle='rgba(255,255,255,.9)'; }
-
-/* ============================================================
-   CULLING — sharpness (Laplacian var), exposure, aHash grouping
-   ============================================================ */
-function analyse(p){
-  // downsample to ~160px long edge grayscale
-  const long=160, s=long/Math.max(p.w,p.h);
-  const w=Math.max(8,Math.round(p.w*s)), h=Math.max(8,Math.round(p.h*s));
-  const c=document.createElement('canvas'); c.width=w; c.height=h;
-  const x=c.getContext('2d',{willReadFrequently:true});
-  x.drawImage(p.bitmap,0,0,w,h);
-  const d=x.getImageData(0,0,w,h).data;
-  const gray=new Float32Array(w*h);
-  let sum=0, clipLo=0, clipHi=0;
-  for(let i=0,j=0;i<d.length;i+=4,j++){
-    const v=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
-    gray[j]=v; sum+=v;
-    if(v<6)clipLo++; if(v>249)clipHi++;
-  }
-  const mean=sum/gray.length;
-  // Laplacian variance → sharpness
-  let lsum=0,lsum2=0,cnt=0;
-  for(let y=1;y<h-1;y++)for(let xx=1;xx<w-1;xx++){
-    const k=y*w+xx;
-    const lap=4*gray[k]-gray[k-1]-gray[k+1]-gray[k-w]-gray[k+w];
-    lsum+=lap; lsum2+=lap*lap; cnt++;
-  }
-  const lvar=cnt?(lsum2/cnt-(lsum/cnt)**2):0;
-  // sharpness 0..100 (soft saturating curve)
-  const sharp=clamp(100*(1-Math.exp(-lvar/350)),0,100);
-  // exposure score: penalise too dark/bright & clipping
-  const clipFrac=(clipLo+clipHi)/gray.length;
-  let expo=100;
-  if(mean<40) expo-= (40-mean)*1.4;
-  if(mean>215) expo-= (mean-215)*1.4;
-  expo-= clipFrac*120;
-  expo=clamp(expo,0,100);
-  // aHash 8x8
-  const hc=document.createElement('canvas'); hc.width=8; hc.height=8;
-  const hx=hc.getContext('2d',{willReadFrequently:true}); hx.drawImage(p.bitmap,0,0,8,8);
-  const hd=hx.getImageData(0,0,8,8).data; const g8=[];
-  let gs=0; for(let i=0;i<hd.length;i+=4){const v=0.299*hd[i]+0.587*hd[i+1]+0.114*hd[i+2];g8.push(v);gs+=v;}
-  const avg=gs/64; let hash=0n;
-  for(let i=0;i<64;i++) hash=(hash<<1n)|(g8[i]>avg?1n:0n);
-  p.sharp=Math.round(sharp); p.expo=Math.round(expo); p.hash=hash;
-  p.score=Math.round(sharp*0.62+expo*0.38);
-}
-function hamming(a,b){ let x=a^b,c=0n; while(x){c+=x&1n;x>>=1n;} return Number(c); }
-
-async function runAutoCull(){
-  if(!state.photos.length)return;
-  busy(true,'Analysing batch');
-  for(let i=0;i<state.photos.length;i++){ analyse(state.photos[i]); if(i%3===0)await wait(0); }
-  // group near-duplicates by hamming distance
-  let g=0; const seen=[];
-  for(const p of state.photos){
-    let found=0;
-    for(const q of seen){ if(hamming(p.hash,q.hash)<=8){ p.group=q.group; found=1; break; } }
-    if(!found){ p.group=++g; seen.push(p); }
-  }
-  // flag: best in each group is a pick (if above threshold), low scorers rejected
-  const groups={};
-  state.photos.forEach(p=>{ (groups[p.group]=groups[p.group]||[]).push(p); });
-  Object.values(groups).forEach(arr=>{
-    arr.sort((a,b)=>b.score-a.score);
-    arr.forEach((p,idx)=>{
-      if(p.score<state.rejectThreshold) p.flag='reject';
-      else if(idx===0) p.flag='pick';
-      else p.flag='none';
-    });
-  });
-  busy(false);
-  renderThumbs(); updateChrome();
-  toast('Auto-cull complete — '+Object.keys(groups).length+' groups');
-  scheduleSessionSave();
-}
-$('#autoCull').onclick=runAutoCull;
-$('#thr').oninput=e=>{ state.rejectThreshold=+e.target.value; $('#thrVal').textContent=e.target.value; };
 
 /* ============================================================
    AUTO-TONE — histogram stretch + gray-world white balance
@@ -1525,15 +1385,12 @@ function openExport(scope){
   if(scope && typeof scope==='string'){
     let list=[];
     if(scope==='selected'){ const p=sel(); if(p)list=[p]; }
-    else if(scope==='picks') list=state.photos.filter(p=>p.flag==='pick');
     else list=state.photos.slice();
     if(!list.length){toast('Nothing to export');return;}
     exportList(list); return;
   }
   const cur=sel();
-  const picks=state.photos.filter(p=>p.flag==='pick');
   $('#expSelectedSub').textContent=cur ? cur.name.replace(/\.[^.]+$/,'').substring(0,28) : 'no photo selected';
-  $('#expPicksSub').textContent=picks.length+' photo'+(picks.length!==1?'s':'');
   $('#expAllSub').textContent=state.photos.length+' photo'+(state.photos.length!==1?'s':'');
   $('#exportModal').classList.remove('hide');
 }
@@ -1543,11 +1400,6 @@ $('#exportModal').onclick=e=>{ if(e.target===$('#exportModal')) closeExportModal
 $('#expSelected').onclick=()=>{
   closeExportModal();
   const p=sel(); if(p) exportList([p]); else toast('No photo selected');
-};
-$('#expPicks').onclick=()=>{
-  closeExportModal();
-  const list=state.photos.filter(p=>p.flag==='pick');
-  if(list.length) exportList(list); else toast('No picks — flag some photos first');
 };
 $('#expAll').onclick=()=>{
   closeExportModal();
@@ -1590,37 +1442,23 @@ async function exportList(list){
 /* ============================================================
    THUMBNAILS + FILTERS + SELECTION
    ============================================================ */
-function visiblePhotos(){
-  if(state.filter==='all')return state.photos;
-  return state.photos.filter(p=>p.flag===state.filter);
-}
 function renderThumbs(){
   const box=$('#thumbs'); box.innerHTML='';
-  visiblePhotos().forEach(p=>{
+  state.photos.forEach(p=>{
     const el=document.createElement('div');
     el.className='thumb'+(p.id===state.selId?' sel':'');
-    el.dataset.flag=p.flag;
-    const sc=p.score==null?'':`<span class="score">${p.score}</span>`;
-    const gp=p.group?`<span class="grp">G${p.group}</span>`:'';
-    el.innerHTML=sc+`<span class="flag">${p.flag==='pick'?'✓':'✕'}</span>${gp}<span class="nm">${p.name}</span>`;
+    el.innerHTML=`<span class="nm">${p.name}</span>`;
     el.insertBefore(p.thumb,el.firstChild);
     el.onclick=()=>{ state.selId=p.id; onPhotoChanged(); renderThumbs(); renderStage(); syncSliders(); drawCurve(); renderLooks(); updateChrome(); mobTab('view'); };
     box.appendChild(el);
   });
 }
-$$('#filters .chip').forEach(c=>c.onclick=()=>{
-  $$('#filters .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on');
-  state.filter=c.dataset.f; renderThumbs();
-});
 
-/* ---------- flag + nav ---------- */
-function setFlag(f){ const p=sel(); if(!p)return; p.flag=p.flag===f?'none':f; renderThumbs(); updateChrome(); }
-$('#flagPick').onclick=()=>setFlag('pick');
-$('#flagReject').onclick=()=>setFlag('reject');
+/* ---------- nav ---------- */
 function move(dir){
-  const vis=visiblePhotos(); if(!vis.length)return;
-  let i=vis.findIndex(p=>p.id===state.selId);
-  i=clamp(i+dir,0,vis.length-1); state.selId=vis[i].id; onPhotoChanged();
+  const photos=state.photos; if(!photos.length)return;
+  let i=photos.findIndex(p=>p.id===state.selId);
+  i=clamp(i+dir,0,photos.length-1); state.selId=photos[i].id; onPhotoChanged();
   renderThumbs(); renderStage(); syncSliders(); drawCurve(); renderLooks(); updateChrome();
 }
 $('#prev').onclick=()=>move(-1); $('#next').onclick=()=>move(1);
@@ -1637,11 +1475,8 @@ window.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&((e.key==='y'||e.key==='Y')||((e.key==='z'||e.key==='Z')&&e.shiftKey))){redo();e.preventDefault();return;}
   if(e.key==='ArrowRight'){move(1);e.preventDefault();}
   else if(e.key==='ArrowLeft'){move(-1);e.preventDefault();}
-  else if(e.key==='p'||e.key==='P')setFlag('pick');
-  else if(e.key==='x'||e.key==='X')setFlag('reject');
-  else if(e.key==='u'||e.key==='U'){const p=sel();if(p){p.flag='none';renderThumbs();updateChrome();}}
   else if(e.key==='b'||e.key==='B'){if(!state.showBefore)before(true);}
-  else if(e.key==='a'||e.key==='A'){if(state.mode==='edit')$('#autoEdit').click();}
+  else if(e.key==='a'||e.key==='A'){$('#autoEdit').click();}
   else if(e.key==='z'||e.key==='Z'){if(sel())toggleZoom();}
   else if((e.key==='Delete'||e.key==='Backspace')&&state.spotMode&&state.selSpot!=null){
     const p=sel(); if(p){ pushHistory(); p.spots=p.spots.filter(s=>s.id!==state.selSpot);
@@ -1650,36 +1485,14 @@ window.addEventListener('keydown',e=>{
 window.addEventListener('keyup',e=>{ if((e.key==='b'||e.key==='B')&&state.showBefore)before(false); });
 
 /* ============================================================
-   MODE SWITCH + CHROME
+   CHROME
    ============================================================ */
-$('#mCull').onclick=()=>switchMode('cull');
-$('#mEdit').onclick=()=>switchMode('edit');
-function switchMode(m){
-  state.mode=m;
-  $('#mCull').classList.toggle('on',m==='cull');
-  $('#mEdit').classList.toggle('on',m==='edit');
-  $('#cullPanel').classList.toggle('hide',m!=='cull');
-  $('#editPanel').classList.toggle('hide',m!=='edit');
-  if(m==='edit'){ syncSliders(); drawCurve(); renderLooks(); renderMasks(); }
-  else {
-    if(state.spotMode){ state.spotMode=false; $('#spotBtn').classList.remove('spot-on'); $('#spotstrip').classList.add('hide'); state.selSpot=null; }
-    if(state.cropMode){ state.cropMode=false; state.cropSnap=null; state._cropView=null; cropHandleDrag=null; $('#cropBtn').classList.remove('active'); $('#cropstrip').classList.add('hide'); }
-    overlay.classList.remove('live'); if(octx)octx.clearRect(0,0,overlay.width,overlay.height);
-  }
-}
 function updateChrome(){
   const n=state.photos.length;
   $('#count').textContent = n? n+' photo'+(n>1?'s':'') : 'no photos';
-  $('#exportBtn').disabled=!n; $('#autoCull').disabled=!n;
-  const picks=state.photos.filter(p=>p.flag==='pick').length;
-  const rej=state.photos.filter(p=>p.flag==='reject').length;
-  const groups=new Set(state.photos.map(p=>p.group).filter(Boolean)).size;
-  const scored=state.photos.filter(p=>p.score!=null);
-  $('#sTotal').textContent=n; $('#sPick').textContent=picks;
-  $('#sReject').textContent=rej; $('#sGroups').textContent=groups;
-  $('#sAvg').textContent=scored.length?Math.round(scored.reduce((a,b)=>a+b.score,0)/scored.length):'—';
+  $('#exportBtn').disabled=!n;
   const p=sel();
-  $('#nav').textContent = p? (visiblePhotos().findIndex(x=>x.id===p.id)+1)+' / '+visiblePhotos().length : '';
+  $('#nav').textContent = p? (state.photos.findIndex(x=>x.id===p.id)+1)+' / '+n : '';
 }
 
 /* ============================================================
@@ -1753,7 +1566,7 @@ function restore(p,snap){ p.adj=structuredClone(snap.adj); p.masks=structuredClo
 function afterEditChange(){ syncSliders(); drawCurve(); renderMasks();
   if(state.activeMask>=sel()?.masks.length) state.activeMask=-1;
   if(state.activeMask>=0) syncMaskSliders(); else closeMaskEditor();
-  renderStage(); if(state.mode==='edit')renderLooks(); updateUndoButtons(); }
+  renderStage(); renderLooks(); updateUndoButtons(); }
 function undo(){ const p=sel(); if(!p||!p._undo.length)return;
   p._redo.push(snapshot(p)); restore(p,p._undo.pop()); afterEditChange(); }
 function redo(){ const p=sel(); if(!p||!p._redo.length)return;
@@ -1858,7 +1671,6 @@ $('#addBrush').onclick=()=>addMask('brush');
 
 function addMask(type){
   const p=sel(); if(!p){toast('Select a photo first');return;}
-  if(state.mode!=='edit'){toast('Switch to Develop');return;}
   pushHistory();
   const base={id:maskUid++,type,feather:50,inverted:false,adj:structuredClone(MASK_ADJ)};
   let m;
@@ -1886,7 +1698,7 @@ function renderMasks(){
   // show/hide brush controls
   const m=p.masks[state.activeMask];
   $('#brushControls').classList.toggle('hide', !(m&&m.type==='brush'));
-  overlay.classList.toggle('live', state.mode==='edit'&&(state.activeMask>=0||state.spotMode||state.cropMode));
+  overlay.classList.toggle('live', state.activeMask>=0||state.spotMode||state.cropMode);
   if(m&&m.type==='brush') overlay.style.cursor='none'; else overlay.style.cursor='crosshair';
   drawOverlay();
 }
@@ -2021,7 +1833,7 @@ window.addEventListener('keydown',e=>{
    CROP & STRAIGHTEN
    ============================================================ */
 function enterCropMode(){
-  const p=sel(); if(!p||state.mode!=='edit'){ toast('Switch to Develop first'); return; }
+  const p=sel(); if(!p) return;
   // close competing tools
   if(state.spotMode) toggleSpotMode();
   closeMaskEditor();
@@ -2238,9 +2050,6 @@ function syncTo(list,label){ if(!state.clipboard){toast('Copy a photo first');re
   list.forEach(p=>{ p._undo.push(snapshot(p)); p._redo.length=0; pasteInto(p); });
   syncSliders(); drawCurve(); renderMasks(); renderStage(); updateUndoButtons();
   toast('Synced to '+list.length+' '+label); }
-$('#syncPicks').onclick=()=>{ const p=sel(); if(p&&!state.clipboard)
-    state.clipboard={adj:structuredClone(p.adj),masks:structuredClone(p.masks)};
-  syncTo(state.photos.filter(x=>x.flag==='pick'),'picks'); };
 $('#syncAll').onclick=()=>{ const p=sel(); if(p&&!state.clipboard)
     state.clipboard={adj:structuredClone(p.adj),masks:structuredClone(p.masks)};
   syncTo(state.photos.slice(),'photos'); };
@@ -2308,12 +2117,9 @@ async function saveSession(){
         const {_buf,_lookSrc,...rest}=m; return rest;
       }),
       spots:p.spots||[],
-      score:p.score, sharp:p.sharp, expo:p.expo,
-      flag:p.flag, group:p.group,
     })),
     selId: state.selId,
     presets: state.presets,
-    filter: state.filter,
   };
   await window.safelight.saveSession(data);
 }
@@ -2332,10 +2138,6 @@ async function restoreSession(){
   renderPresets();
 }
 
-// hook session saves onto state-mutating actions
-const _origSetFlag=setFlag;
-function setFlag(f){ _origSetFlag(f); scheduleSessionSave(); }
-
 /* ============================================================
    MENU EVENTS FROM MAIN PROCESS
    ============================================================ */
@@ -2351,12 +2153,9 @@ if(IS_ELECTRON){
       case 'menu:paste':      $('#pasteSet').click(); break;
       case 'menu:autotone':   $('#autoEdit').click(); break;
       case 'menu:reset':      $('#resetEdit').click(); break;
-      case 'menu:flag':       setFlag(args[0]); break;
       case 'menu:nav':        move(args[0]); break;
       case 'menu:zoom':       toggleZoom(); break;
       case 'menu:before':     before(!state.showBefore); break;
-      case 'menu:mode':       switchMode(args[0]); break;
-      case 'menu:autoCull':   $('#autoCull').click(); break;
       case 'menu:shortcuts':  showShortcuts(); break;
     }
   });
@@ -2381,17 +2180,12 @@ function showShortcuts(){
       ['← / →','Previous / Next photo'],
       ['Z','Toggle 100% zoom'],
       ['B (hold)','Before / After'],
-      ['Flagging',''],
-      ['P','Flag as Pick'],
-      ['X','Flag as Reject'],
-      ['U','Unflag'],
       ['Develop',''],
       ['A','Auto-tone'],
       ['Ctrl+Z / Ctrl+Y','Undo / Redo'],
       ['[ / ]','Brush size smaller / larger'],
       ['Export',''],
       ['Ctrl+E','Export selected'],
-      ['Ctrl+Shift+E','Export picks'],
     ].map(([k,v])=>k&&!v
       ? `<div style="font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);margin:12px 0 4px">${k}</div>`
       : `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid var(--line);font-size:12px">
