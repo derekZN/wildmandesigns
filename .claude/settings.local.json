@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git --version)",
+      "Bash(git -C \"c:/Users/USER-PC/Documents/wildmandesigns\" status)",
+      "Bash(git -C \"c:/Users/USER-PC/Documents/wildmandesigns\" log --oneline -5)",
+      "Bash(git -C \"c:/Users/USER-PC/Documents/wildmandesigns\" diff --stat)",
+      "Bash(git -C \"c:/Users/USER-PC/Documents/wildmandesigns\" add index.html manifest.json)",
+      "Bash(git -C c:/Users/USER-PC/Documents/wildmandesigns commit -m ' *)",
+      "Bash(git -C \"c:/Users/USER-PC/Documents/wildmandesigns\" push)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
+    ]
+  }
+}
