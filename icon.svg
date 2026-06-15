@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%">
+      <stop offset="0%" stop-color="#1a2a1a"/>
+      <stop offset="100%" stop-color="#09100a"/>
+    </radialGradient>
+    <radialGradient id="atm" cx="50%" cy="46%" r="45%">
+      <stop offset="0%" stop-color="#7a4010" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#7a4010" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mtn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#2d4828"/>
+      <stop offset="100%" stop-color="#0e1b0e"/>
+    </linearGradient>
+    <filter id="sunfx" x="-120%" y="-120%" width="340%" height="340%">
+      <feGaussianBlur stdDeviation="22" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softglow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="8" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+  <!-- Warm golden-hour atmosphere behind mountains -->
+  <rect width="512" height="512" rx="96" fill="url(#atm)"/>
+
+  <!-- Sun glow at the W valley -->
+  <circle cx="256" cy="238" r="90" fill="#E8A24A" opacity="0.45" filter="url(#sunfx)"/>
+  <circle cx="256" cy="238" r="42" fill="#E8A24A" filter="url(#sunfx)"/>
+  <circle cx="256" cy="238" r="26" fill="#f5c06a" filter="url(#softglow)"/>
+  <circle cx="256" cy="238" r="14" fill="#fde08a"/>
+
+  <!-- Back mountain layer (lighter, misty) -->
+  <path d="M0 440 L90 230 L180 330 L256 200 L332 330 L422 230 L512 440 Z"
+        fill="#1f3a1a" opacity="0.55"/>
+
+  <!-- Main W mountain silhouette — two peaks = the W letterform -->
+  <path d="M-10 480
+    L118 118
+    L222 302
+    L256 234
+    L290 302
+    L394 118
+    L522 480
+    Z" fill="url(#mtn)"/>
+
+  <!-- Snow/highlight on left peak -->
+  <path d="M118 118 L148 182 L200 264 L148 204 Z" fill="#c8e0c0" opacity="0.12"/>
+  <!-- Snow/highlight on right peak -->
+  <path d="M394 118 L364 182 L312 264 L364 204 Z" fill="#c8e0c0" opacity="0.12"/>
+
+  <!-- Ridge line detail left mountain -->
+  <path d="M118 118 L162 200 L222 302" fill="none" stroke="#3a5c32" stroke-width="2" opacity="0.4"/>
+  <!-- Ridge line detail right mountain -->
+  <path d="M394 118 L350 200 L290 302" fill="none" stroke="#3a5c32" stroke-width="2" opacity="0.4"/>
+
+  <!-- Foreground ground/treeline (jagged silhouette) -->
+  <path d="M0 512 L0 428
+    Q30 415 50 430 Q65 418 80 428 Q100 410 115 425 Q132 412 148 426
+    Q164 408 180 422 Q200 406 218 420 Q236 408 256 414
+    Q274 408 292 420 Q312 406 330 422 Q348 412 364 426
+    Q380 410 396 425 Q412 412 428 428 Q445 416 462 430 Q478 418 492 428
+    Q504 415 512 422 L512 512 Z" fill="#0a150a"/>
+
+  <!-- Subtle aperture ring -->
+  <circle cx="256" cy="300" r="215" fill="none" stroke="#2a4025" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- "W" monogram watermark (very faint, in lower area) -->
+  <text x="256" y="490" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif"
+    font-size="52" font-weight="800" text-anchor="middle" letter-spacing="10"
+    fill="#5a9050" opacity="0.55">WILDMAN</text>
+</svg>
