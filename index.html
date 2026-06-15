@@ -557,6 +557,10 @@
    All processing is local & non-destructive. Originals are never modified.
    ============================================================ */
 
+if (screen.orientation && screen.orientation.lock) {
+  screen.orientation.lock('portrait').catch(() => {});
+}
+
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 
