@@ -4,6 +4,7 @@
   "description": "Professional photo culling and non-destructive developing for nature photographers",
   "start_url": "./index.html",
   "display": "standalone",
+  "start_url": "./index.html",
   "background_color": "#15171C",
   "theme_color": "#15171C",
   "orientation": "landscape",
