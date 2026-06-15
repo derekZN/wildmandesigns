@@ -941,7 +941,8 @@ function applySpots(img, p, sx, sy, sw, sh){
 }
 
 /* ---------- render selected photo to #view (zoom/pan aware) ---------- */
-const viewCanvas=$('#view'); const vctx=viewCanvas.getContext('2d',{willReadFrequently:true});
+const displayCanvas=$('#view'); const displayCtx=displayCanvas.getContext('2d');
+const viewCanvas=document.createElement('canvas'); const vctx=viewCanvas.getContext('2d',{willReadFrequently:true});
 const overlay=$('#overlay'); const octx=overlay.getContext('2d');
 let renderTimer=null;
 let lastRegion=null; // {sx,sy,sw,sh,cw,ch} for overlay coordinate mapping
@@ -1004,9 +1005,10 @@ function renderStageTransform(p, availW, availH){
     scale=Math.min(availW/rotW, availH/rotH);
     cw=Math.round(rotW*scale); ch=Math.round(rotH*scale);
     const dpr1=Math.min(window.devicePixelRatio||1,2);
+    const dprF1=window.devicePixelRatio||1;
     const pcw1=Math.round(cw*dpr1), pch1=Math.round(ch*dpr1);
+    const pcwF1=Math.round(cw*dprF1), pchF1=Math.round(ch*dprF1);
     viewCanvas.width=pcw1; viewCanvas.height=pch1;
-    viewCanvas.style.width=cw+'px'; viewCanvas.style.height=ch+'px';
     vctx.imageSmoothingEnabled=true; vctx.imageSmoothingQuality='high';
     vctx.scale(dpr1,dpr1);
     _drawTransformed(vctx,p,cw,ch,scale,0,0);
@@ -1015,6 +1017,10 @@ function renderStageTransform(p, availW, availH){
       const img=vctx.getImageData(0,0,pcw1,pch1);
       processImageData(img,p.adj); vctx.putImageData(img,0,0);
     }
+    displayCanvas.width=pcwF1; displayCanvas.height=pchF1;
+    displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
+    displayCtx.imageSmoothingEnabled=true; displayCtx.imageSmoothingQuality='high';
+    displayCtx.drawImage(viewCanvas,0,0,pcwF1,pchF1);
     state._cropView={scale,rotW,rotH,cw,ch};
     lastRegion={sx:0,sy:0,sw:rotW,sh:rotH,cw,ch};
   } else {
@@ -1024,9 +1030,10 @@ function renderStageTransform(p, availW, availH){
     cw=Math.round(cropW*scale); ch=Math.round(cropH*scale);
     dx=((crop.l+crop.r)/2-0.5)*rotW; dy=((crop.t+crop.b)/2-0.5)*rotH;
     const dpr2=Math.min(window.devicePixelRatio||1,2);
+    const dprF2=window.devicePixelRatio||1;
     const pcw2=Math.round(cw*dpr2), pch2=Math.round(ch*dpr2);
+    const pcwF2=Math.round(cw*dprF2), pchF2=Math.round(ch*dprF2);
     viewCanvas.width=pcw2; viewCanvas.height=pch2;
-    viewCanvas.style.width=cw+'px'; viewCanvas.style.height=ch+'px';
     vctx.imageSmoothingEnabled=true; vctx.imageSmoothingQuality='high';
     vctx.scale(dpr2,dpr2);
     _drawTransformed(vctx,p,cw,ch,scale,dx,dy);
@@ -1038,6 +1045,10 @@ function renderStageTransform(p, availW, availH){
       applySpots(img,p,crop.l*rotW,crop.t*rotH,cropW*1,cropH*1);
       vctx.putImageData(img,0,0);
     }
+    displayCanvas.width=pcwF2; displayCanvas.height=pchF2;
+    displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
+    displayCtx.imageSmoothingEnabled=true; displayCtx.imageSmoothingQuality='high';
+    displayCtx.drawImage(viewCanvas,0,0,pcwF2,pchF2);
     lastRegion={sx:crop.l*rotW,sy:crop.t*rotH,sw:(crop.r-crop.l)*rotW,sh:(crop.b-crop.t)*rotH,cw,ch};
   }
   overlay.width=cw; overlay.height=ch; overlay.style.width=cw+'px'; overlay.style.height=ch+'px';
@@ -1046,8 +1057,8 @@ function renderStageTransform(p, availW, availH){
 
 function renderStage(){
   const p=sel();
-  if(!p){ viewCanvas.classList.add('hide'); overlay.classList.add('hide'); $('#empty').classList.remove('hide'); return; }
-  $('#empty').classList.add('hide'); viewCanvas.classList.remove('hide');
+  if(!p){ displayCanvas.classList.add('hide'); overlay.classList.add('hide'); $('#empty').classList.remove('hide'); return; }
+  $('#empty').classList.add('hide'); displayCanvas.classList.remove('hide');
   const box=stage.getBoundingClientRect();
   const availW=Math.max(64,box.width-36), availH=Math.max(64,box.height-36);
   if(state.cropMode||hasCropTransform(p)){ renderStageTransform(p,availW,availH); return; }
@@ -1062,10 +1073,11 @@ function renderStage(){
     sx=clamp(state.view.panX, 0, p.w-sw); sy=clamp(state.view.panY, 0, p.h-sh);
     state.view.panX=sx; state.view.panY=sy;
   }
-  const dpr=state.view.mode==='fit' ? Math.min(window.devicePixelRatio||1,2) : 1;
+  const dprDev=window.devicePixelRatio||1;
+  const dpr=state.view.mode==='fit' ? Math.min(dprDev,2) : 1;
   const pcw=Math.round(cw*dpr), pch=Math.round(ch*dpr);
+  const pcwF=Math.round(cw*dprDev), pchF=Math.round(ch*dprDev);
   viewCanvas.width=pcw; viewCanvas.height=pch;
-  viewCanvas.style.width=cw+'px'; viewCanvas.style.height=ch+'px';
   vctx.imageSmoothingEnabled=true; vctx.imageSmoothingQuality='high';
   vctx.drawImage(p.bitmap, sx,sy,sw,sh, 0,0,pcw,pch);
   if(!state.showBefore){
@@ -1075,6 +1087,10 @@ function renderStage(){
     applySpots(img,p,sx,sy,sw,sh);
     vctx.putImageData(img,0,0);
   }
+  displayCanvas.width=pcwF; displayCanvas.height=pchF;
+  displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
+  displayCtx.imageSmoothingEnabled=true; displayCtx.imageSmoothingQuality='high';
+  displayCtx.drawImage(viewCanvas,0,0,pcwF,pchF);
   lastRegion={sx,sy,sw,sh,cw,ch};
   overlay.width=cw; overlay.height=ch; overlay.style.width=cw+'px'; overlay.style.height=ch+'px';
   drawOverlay(); drawHistogram(p);
@@ -1763,7 +1779,7 @@ function toggleZoom(nx,ny){
 }
 $('#zoomBtn').onclick=()=>toggleZoom();
 // click image to toggle zoom (only when not editing a mask)
-viewCanvas.addEventListener('click',e=>{
+displayCanvas.addEventListener('click',e=>{
   if(overlay.classList.contains('live'))return;
   if(panMoved){panMoved=false;return;}
   const r=lastRegion,p=sel(); if(!r||!p)return;
@@ -1772,19 +1788,19 @@ viewCanvas.addEventListener('click',e=>{
 });
 // pan by dragging when zoomed
 let panning=false, panStart=null, panMoved=false;
-viewCanvas.addEventListener('pointerdown',e=>{
+displayCanvas.addEventListener('pointerdown',e=>{
   if(state.view.mode==='fit'||overlay.classList.contains('live'))return;
   panning=true; panMoved=false; panStart={x:e.clientX,y:e.clientY,px:state.view.panX,py:state.view.panY};
-  stage.classList.add('panning'); viewCanvas.setPointerCapture(e.pointerId);
+  stage.classList.add('panning'); displayCanvas.setPointerCapture(e.pointerId);
 });
-viewCanvas.addEventListener('pointermove',e=>{
+displayCanvas.addEventListener('pointermove',e=>{
   if(!panning)return; const p=sel(); const r=lastRegion;
   const dx=(e.clientX-panStart.x)*(r.sw/r.cw), dy=(e.clientY-panStart.y)*(r.sh/r.ch);
   if(Math.abs(dx)>2||Math.abs(dy)>2)panMoved=true;
   state.view.panX=clamp(panStart.px-dx,0,p.w-r.sw); state.view.panY=clamp(panStart.py-dy,0,p.h-r.sh);
   renderStage();
 });
-viewCanvas.addEventListener('pointerup',()=>{ panning=false; stage.classList.remove('panning'); });
+displayCanvas.addEventListener('pointerup',()=>{ panning=false; stage.classList.remove('panning'); });
 
 /* ============================================================
    MASKS
