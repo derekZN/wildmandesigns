@@ -96,7 +96,7 @@
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
   /* ---- center stage ---- */
-  .stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;padding:18px}
+  .stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;padding:18px;transition:padding .2s ease}
   .viewwrap{position:relative;max-width:100%;max-height:100%;line-height:0}
   #view{max-width:100%;max-height:100%;box-shadow:0 8px 40px rgba(0,0,0,.55);background:#000;display:block}
   #overlay{position:absolute;top:0;left:0;pointer-events:none}
@@ -285,6 +285,10 @@
       background:var(--line);border-radius:2px;
       margin:10px auto 4px;flex-shrink:0
     }
+
+    /* shrink the visible photo area so it's never hidden behind an open panel */
+    .stage.sheet-open{padding-bottom:58vh}
+    .stage.strip-open{padding-top:108px}
 
     /* touch-friendly controls */
     .btn{padding:10px 14px;min-height:40px}
@@ -1061,7 +1065,16 @@ function renderStage(){
   if(!p){ displayCanvas.classList.add('hide'); overlay.classList.add('hide'); $('#empty').classList.remove('hide'); return; }
   $('#empty').classList.add('hide'); displayCanvas.classList.remove('hide');
   const box=stage.getBoundingClientRect();
-  const availW=Math.max(64,box.width-36), availH=Math.max(64,box.height-36);
+  const availW=Math.max(64,box.width-36);
+  let availH=Math.max(64,box.height-36);
+  // shrink the fit area so the photo isn't hidden behind an open mobile panel
+  if(stage.classList.contains('sheet-open')){
+    const rightCol=document.querySelector('.col.right');
+    if(rightCol) availH=Math.max(64,availH-rightCol.getBoundingClientRect().height);
+  } else if(stage.classList.contains('strip-open')){
+    const leftCol=document.querySelector('.col.left');
+    if(leftCol) availH=Math.max(64,availH-leftCol.getBoundingClientRect().height);
+  }
   if(state.cropMode||hasCropTransform(p)){ renderStageTransform(p,availW,availH); return; }
   let sx,sy,sw,sh,cw,ch;
   if(state.view.mode==='fit'){
@@ -1655,7 +1668,21 @@ function toggleZoom(nx,ny){
 }
 $('#zoomBtn').onclick=()=>toggleZoom();
 // click image to toggle zoom (only when not editing a mask)
+stage.addEventListener('click',e=>{
+  if(e.target!==stage) return; // only the empty background, not the canvas (handled below) or controls
+  if(window.innerWidth<=768){
+    const leftOpen=document.querySelector('.col.left').classList.contains('mob-show');
+    const rightOpen=document.querySelector('.col.right').classList.contains('mob-show');
+    if(leftOpen||rightOpen) mobTab('view');
+  }
+});
 displayCanvas.addEventListener('click',e=>{
+  // tapping the photo while a mobile panel is open closes it and returns full focus to the image
+  if(window.innerWidth<=768){
+    const leftOpen=document.querySelector('.col.left').classList.contains('mob-show');
+    const rightOpen=document.querySelector('.col.right').classList.contains('mob-show');
+    if(leftOpen||rightOpen){ mobTab('view'); return; }
+  }
   if(overlay.classList.contains('live'))return;
   if(panMoved){panMoved=false;return;}
   const r=lastRegion,p=sel(); if(!r||!p)return;
@@ -2129,18 +2156,22 @@ function mobTab(tab){
   const right = document.querySelector('.col.right');
   left.classList.remove('mob-show');
   right.classList.remove('mob-show');
+  stage.classList.remove('sheet-open','strip-open');
   MOB_TABS.forEach(id=>{ const el=$('#'+id); if(el) el.classList.remove('on'); });
 
   if(tab === 'film'){
     left.classList.add('mob-show');
+    stage.classList.add('strip-open');
     $('#tabFilm').classList.add('on');
   } else if(tab === 'edit'){
     right.classList.add('mob-show');
+    stage.classList.add('sheet-open');
     $('#tabEdit').classList.add('on');
     // scroll to top of sliders
     const p = $('#editPanel'); if(p) p.scrollTop = 0;
   } else if(tab === 'looks'){
     right.classList.add('mob-show');
+    stage.classList.add('sheet-open');
     $('#tabLooks').classList.add('on');
     // scroll to looks section
     const panel = $('#editPanel'), target = $('#lookGrid');
@@ -2150,6 +2181,7 @@ function mobTab(tab){
     }
   } else if(tab === 'masks'){
     right.classList.add('mob-show');
+    stage.classList.add('sheet-open');
     $('#tabMasks').classList.add('on');
     // scroll to masks section
     const panel = $('#editPanel'), target = $('#maskList');
@@ -2159,8 +2191,9 @@ function mobTab(tab){
     }
   } else {
     $('#tabView').classList.add('on');
-    scheduleRender();
   }
+  // re-fit the photo to whatever space is now visible above/below the panel
+  scheduleRender();
 }
 $('#tabView').addEventListener('click', ()=>mobTab('view'));
 $('#tabFilm').addEventListener('click', ()=>mobTab('film'));
