@@ -162,7 +162,9 @@
   #curve{width:100%;height:140px;background:var(--panel-2);border:1px solid var(--line);
     border-radius:8px;display:block;cursor:crosshair}
   .presets{padding:10px 14px}
-  .looks{padding:6px 14px 4px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+  .look-cat-h{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--amber-dim);padding:12px 14px 4px}
+  .looks{padding:2px 14px 4px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
   .look{cursor:pointer;border:1px solid var(--line);border-radius:7px;overflow:hidden;
     background:var(--thumb-bg);transition:border-color .12s}
   .look:hover{border-color:var(--amber)}
@@ -267,10 +269,10 @@
     }
     .thumb canvas{width:76px!important;height:56px!important;object-fit:cover}
 
-    /* right panel: bottom sheet — photo stays visible above */
+    /* right panel: bottom sheet — photo stays visible above and stays the focus */
     .col.right{
       position:absolute;bottom:0;left:0;right:0;
-      height:58vh;z-index:6;display:none;
+      height:42vh;z-index:6;display:none;
       flex-direction:column;
       background:var(--panel);
       border-top-left-radius:18px;border-top-right-radius:18px;
@@ -283,12 +285,20 @@
     .sheet-handle{
       display:block;width:36px;height:4px;
       background:var(--line);border-radius:2px;
-      margin:10px auto 4px;flex-shrink:0
+      margin:8px auto 2px;flex-shrink:0
     }
 
     /* shrink the visible photo area so it's never hidden behind an open panel */
-    .stage.sheet-open{padding-bottom:58vh}
+    .stage.sheet-open{padding-bottom:42vh}
     .stage.strip-open{padding-top:108px}
+
+    /* tighter panel content so more fits in the smaller sheet */
+    .histwrap{padding:8px 14px 4px}
+    #hist{height:48px}
+    .panel-actions{padding:8px 14px}
+    .syncrow{padding:6px 14px}
+    .grp-h{padding:8px 14px 4px}
+    .slider{padding:4px 14px}
 
     /* touch-friendly controls */
     .btn{padding:10px 14px;min-height:40px}
@@ -305,10 +315,6 @@
     .stagebar .ghost{padding:6px 14px;min-height:0;border-radius:20px;background:var(--panel-2);font-size:12px;white-space:nowrap;flex-shrink:0}
     .stagebar .spacer{display:none}
     .stagebar .nav{flex-shrink:0}
-
-    /* histogram full-width inside sheet */
-    #hist{width:100%}
-    .histwrap{padding:10px 14px 6px}
 
     /* bottom nav — 5 tabs */
     .mob-tabs{
@@ -487,7 +493,7 @@
       <div class="curvewrap"><canvas id="curve" width="268" height="140"></canvas></div>
 
       <div class="grp-h">Built-in looks <span style="text-transform:none;letter-spacing:0;color:var(--faint)">tap to apply</span></div>
-      <div class="looks" id="lookGrid"></div>
+      <div id="lookGrid"></div>
 
       <div class="grp-h">Your presets
         <span>
@@ -1568,49 +1574,80 @@ function updateChrome(){
    ============================================================ */
 function lookPreset(partial){ return Object.assign(structuredClone(DEFAULT_ADJ), structuredClone(partial)); }
 const BUILTIN_PRESETS=[
-  {name:'Original',     adj:lookPreset({})},
-  {name:'Punch',        adj:lookPreset({contrast:28,vibrance:30,clarity:18,saturation:6})},
-  {name:'Soft Film',    adj:lookPreset({contrast:-12,temp:12,vibrance:8,saturation:-8,curve:[[0,18],[64,72],[192,196],[255,238]]})},
-  {name:'Mono',         adj:lookPreset({saturation:-100,contrast:18,clarity:20})},
-  {name:'Mono Bold',    adj:lookPreset({saturation:-100,contrast:42,blacks:-20,whites:15,clarity:28})},
-  {name:'Warm Gold',    adj:lookPreset({temp:34,tint:6,vibrance:16,highlights:-18,exposure:0.08})},
-  {name:'Cool Blue',    adj:lookPreset({temp:-30,tint:-8,contrast:16,vibrance:10})},
-  {name:'Fade Matte',   adj:lookPreset({contrast:-18,vibrance:-6,curve:[[0,36],[128,128],[255,226]]})},
-  {name:'High Key',     adj:lookPreset({exposure:0.32,shadows:30,whites:18,contrast:-6})},
-  {name:'Moody',        adj:lookPreset({exposure:-0.18,contrast:24,shadows:-22,highlights:-10,vibrance:-8,clarity:14})},
-  {name:'Portrait',     adj:lookPreset({contrast:10,clarity:14,temp:8,vibrance:14,sharpen:25})},
-  {name:'Teal/Orange',  adj:lookPreset({temp:14,vibrance:18,contrast:14,curve:[[0,10],[64,56],[192,202],[255,250]]})},
+  {cat:'Essentials', name:'Original',      adj:lookPreset({})},
+
+  {cat:'Mono', name:'Mono Classic', adj:lookPreset({saturation:-100,contrast:18,clarity:20})},
+  {cat:'Mono', name:'Mono Bold',    adj:lookPreset({saturation:-100,contrast:42,blacks:-20,whites:15,clarity:28})},
+  {cat:'Mono', name:'Mono Soft',    adj:lookPreset({saturation:-100,contrast:-10,highlights:-10,shadows:10,clarity:5})},
+  {cat:'Mono', name:'Mono Cool',    adj:lookPreset({saturation:-100,temp:-20,contrast:22,clarity:15})},
+  {cat:'Mono', name:'Mono Warm',    adj:lookPreset({saturation:-100,temp:25,contrast:20,clarity:12})},
+  {cat:'Mono', name:'Mono High-Key',adj:lookPreset({saturation:-100,exposure:0.25,contrast:-8,whites:20})},
+
+  {cat:'Film', name:'Soft Film',    adj:lookPreset({contrast:-12,temp:12,vibrance:8,saturation:-8,curve:[[0,18],[64,72],[192,196],[255,238]]})},
+  {cat:'Film', name:'Fade Matte',   adj:lookPreset({contrast:-18,vibrance:-6,curve:[[0,36],[128,128],[255,226]]})},
+  {cat:'Film', name:'Vintage Warm', adj:lookPreset({temp:22,tint:8,contrast:-10,vibrance:-10,curve:[[0,22],[128,132],[255,235]]})},
+  {cat:'Film', name:'Faded Slide',  adj:lookPreset({contrast:-15,vibrance:-15,whites:-10,blacks:10,curve:[[0,28],[128,126],[255,230]]})},
+  {cat:'Film', name:'Cross Process',adj:lookPreset({temp:-10,tint:15,contrast:20,curve:[[0,10],[96,80],[160,180],[255,245]]})},
+  {cat:'Film', name:'Bleach Bypass',adj:lookPreset({saturation:-40,contrast:35,clarity:25})},
+
+  {cat:'Color & Punch', name:'Punch',        adj:lookPreset({contrast:28,vibrance:30,clarity:18,saturation:6})},
+  {cat:'Color & Punch', name:'Vivid Nature', adj:lookPreset({vibrance:35,saturation:10,contrast:15,clarity:10})},
+  {cat:'Color & Punch', name:'Teal/Orange',  adj:lookPreset({temp:14,vibrance:18,contrast:14,curve:[[0,10],[64,56],[192,202],[255,250]]})},
+  {cat:'Color & Punch', name:'Autumn Glow',  adj:lookPreset({temp:20,vibrance:25,contrast:12,highlights:-10})},
+  {cat:'Color & Punch', name:'Forest Boost', adj:lookPreset({vibrance:20,saturation:8,temp:-5,clarity:15})},
+  {cat:'Color & Punch', name:'Sky Pop',      adj:lookPreset({contrast:18,vibrance:22,temp:-8,clarity:10})},
+
+  {cat:'Light & Mood', name:'High Key',      adj:lookPreset({exposure:0.32,shadows:30,whites:18,contrast:-6})},
+  {cat:'Light & Mood', name:'Moody',         adj:lookPreset({exposure:-0.18,contrast:24,shadows:-22,highlights:-10,vibrance:-8,clarity:14})},
+  {cat:'Light & Mood', name:'Golden Hour',   adj:lookPreset({temp:30,tint:5,exposure:0.1,highlights:-15,vibrance:10})},
+  {cat:'Light & Mood', name:'Misty Morning', adj:lookPreset({contrast:-12,whites:-15,shadows:15,vibrance:-10,exposure:0.05})},
+  {cat:'Light & Mood', name:'Overcast Lift', adj:lookPreset({exposure:0.15,shadows:20,contrast:-5,vibrance:8})},
+  {cat:'Light & Mood', name:'Deep Shadow',   adj:lookPreset({exposure:-0.2,blacks:-25,contrast:20,clarity:12})},
+
+  {cat:'Portrait', name:'Portrait',  adj:lookPreset({contrast:10,clarity:14,temp:8,vibrance:14,sharpen:25})},
+  {cat:'Portrait', name:'Warm Skin', adj:lookPreset({temp:12,vibrance:10,highlights:-8,clarity:8})},
+  {cat:'Portrait', name:'Soft Glow', adj:lookPreset({contrast:-8,clarity:-15,highlights:-5,exposure:0.05})},
 ];
 
 function lookSource(p){
   if(p._lookSrc) return p._lookSrc;
-  const long=130, s=long/Math.max(p.w,p.h);
+  const dpr=Math.min(window.devicePixelRatio||1,3);
+  const long=130*dpr, s=long/Math.max(p.w,p.h);
   const w=Math.max(8,Math.round(p.w*s)), h=Math.max(8,Math.round(p.h*s));
   const c=document.createElement('canvas'); c.width=w; c.height=h;
-  c.getContext('2d',{willReadFrequently:true}).drawImage(p.bitmap,0,0,w,h);
+  const x=c.getContext('2d',{willReadFrequently:true});
+  x.imageSmoothingEnabled=true; x.imageSmoothingQuality='high';
+  x.drawImage(p.bitmap,0,0,w,h);
   p._lookSrc={canvas:c,w,h}; return p._lookSrc;
 }
 function renderLooks(){
-  const grid=$('#lookGrid'); if(!grid)return; grid.innerHTML='';
+  const container=$('#lookGrid'); if(!container)return; container.innerHTML='';
   const p=sel();
-  BUILTIN_PRESETS.forEach(lk=>{
-    const tile=document.createElement('div'); tile.className='look';
-    if(p && JSON.stringify(p.adj)===JSON.stringify(lk.adj)) tile.classList.add('on');
-    if(p){
-      const src=lookSource(p);
-      const cv=document.createElement('canvas'); cv.width=src.w; cv.height=src.h;
-      const x=cv.getContext('2d',{willReadFrequently:true});
-      x.drawImage(src.canvas,0,0);
-      const img=x.getImageData(0,0,src.w,src.h);
-      processImageData(img,lk.adj); x.putImageData(img,0,0);
-      tile.appendChild(cv);
-    } else {
-      const ni=document.createElement('div'); ni.className='noimg'; ni.textContent='—'; tile.appendChild(ni);
-    }
-    const ln=document.createElement('div'); ln.className='ln'; ln.textContent=lk.name; tile.appendChild(ln);
-    tile.onclick=()=>{ const q=sel(); if(!q){toast('Select a photo first');return;}
-      pushHistory(); q.adj=structuredClone(lk.adj); syncSliders(); drawCurve(); renderStage(); renderLooks(); toast(lk.name); };
-    grid.appendChild(tile);
+  const cats=[...new Set(BUILTIN_PRESETS.map(l=>l.cat))];
+  cats.forEach(cat=>{
+    const head=document.createElement('div'); head.className='look-cat-h'; head.textContent=cat;
+    container.appendChild(head);
+    const grid=document.createElement('div'); grid.className='looks';
+    BUILTIN_PRESETS.filter(l=>l.cat===cat).forEach(lk=>{
+      const tile=document.createElement('div'); tile.className='look';
+      if(p && JSON.stringify(p.adj)===JSON.stringify(lk.adj)) tile.classList.add('on');
+      if(p){
+        const src=lookSource(p);
+        const cv=document.createElement('canvas'); cv.width=src.w; cv.height=src.h;
+        const x=cv.getContext('2d',{willReadFrequently:true});
+        x.drawImage(src.canvas,0,0);
+        const img=x.getImageData(0,0,src.w,src.h);
+        processImageData(img,lk.adj); x.putImageData(img,0,0);
+        tile.appendChild(cv);
+      } else {
+        const ni=document.createElement('div'); ni.className='noimg'; ni.textContent='—'; tile.appendChild(ni);
+      }
+      const ln=document.createElement('div'); ln.className='ln'; ln.textContent=lk.name; tile.appendChild(ln);
+      tile.onclick=()=>{ const q=sel(); if(!q){toast('Select a photo first');return;}
+        pushHistory(); q.adj=structuredClone(lk.adj); syncSliders(); drawCurve(); renderStage(); renderLooks(); toast(lk.name); };
+      grid.appendChild(tile);
+    });
+    container.appendChild(grid);
   });
 }
 
