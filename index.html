@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.json">
-<title>WildmanDesigns — cull & develop</title>
+<title>WildmanDesigns — develop</title>
 <style>
   :root{
     --bg:#15171C; --panel:#1C1F26; --panel-2:#23272F; --line:#2B303A;
@@ -352,6 +352,9 @@
     }
     .mob-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
     .mob-tab.on{color:var(--amber);box-shadow:inset 0 3px 0 0 var(--amber)}
+
+    /* keep toasts clear of the bottom nav bar */
+    .toast{bottom:calc(70px + env(safe-area-inset-bottom))}
   }
 </style>
 </head>
@@ -609,7 +612,7 @@
 <script>
 "use strict";
 /* ============================================================
-   WildmanDesigns — photo culling + develop engine (vanilla JS)
+   WildmanDesigns — photo develop engine (vanilla JS)
    All processing is local & non-destructive. Originals are never modified.
    ============================================================ */
 
@@ -620,6 +623,12 @@ function lockPortrait() {
 }
 lockPortrait();
 document.addEventListener('click', lockPortrait, { once: true });
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch(err => console.warn('SW registration failed', err));
+  });
+}
 
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
@@ -799,10 +808,11 @@ async function loadRawBitmap(file){
 }
 
 async function addFiles(files){
+  const skipped=files.filter(f=>!isSupportedFile(f)).map(f=>f.name);
   files=files.filter(f=>isSupportedFile(f));
   if(!files.length){ toast('Unsupported format — use JPEG, PNG, WebP or RAW (NEF/CR2/ARW/DNG/ORF)'); return; }
   busy(true,'Importing '+files.length+' photo'+(files.length>1?'s':''));
-  let added=0; const failed=[];
+  let added=0; const failed=[...skipped];
   for(const f of files){
     try{
       const bmp = isRawFile(f)
@@ -824,7 +834,7 @@ async function addFiles(files){
   renderThumbs(); renderStage(); renderLooks(); updateChrome();
   scheduleSessionSave();
   if(failed.length){
-    toast(added+' loaded, '+failed.length+' failed: '+failed.slice(0,3).join(', ')+(failed.length>3?'…':''));
+    toast(added+' loaded, '+failed.length+' skipped: '+failed.slice(0,3).join(', ')+(failed.length>3?'…':''));
   } else {
     toast(added+' photo'+(added!==1?'s':'')+' loaded');
   }
@@ -1577,12 +1587,20 @@ async function exportList(list){
   busy(true,'Rendering '+list.length+' photo'+(list.length>1?'s':'')+'…');
   // render all photos to base64 first
   const rendered=[];
+  const usedNames=new Set();
   for(let i=0;i<list.length;i++){
     const p=list[i];
     busy(true,`Rendering ${i+1}/${list.length}: ${p.name}`);
     const c=renderFullRes(p);
     const blob=await new Promise(res=>c.toBlob(res,'image/jpeg',0.92));
-    const outName=p.name.replace(/\.(jpe?g|png|webp|tiff?|nef|cr2|arw|dng|orf|rw2|pef|srw)$/i,'')+'_edited.jpg';
+    let outName=p.name.replace(/\.(jpe?g|png|webp|tiff?|nef|cr2|arw|dng|orf|rw2|pef|srw)$/i,'')+'_edited.jpg';
+    if(usedNames.has(outName)){
+      // avoid silently overwriting when a RAW+JPEG pair share the same base filename
+      const base=outName.replace(/\.jpg$/i,''); let n=2;
+      while(usedNames.has(`${base}_${n}.jpg`)) n++;
+      outName=`${base}_${n}.jpg`;
+    }
+    usedNames.add(outName);
     if(IS_ELECTRON){
       const ab=await blob.arrayBuffer();
       const b64=btoa(String.fromCharCode(...new Uint8Array(ab)));
@@ -1609,7 +1627,10 @@ async function exportList(list){
 /* ============================================================
    THUMBNAILS + FILTERS + SELECTION
    ============================================================ */
-let suppressThumbClick=false;
+// Long-press fires a DOM rebuild mid-gesture, so the gesture's own trailing
+// click often never arrives to clear a one-shot suppress flag — use a time
+// window instead so an unrelated later tap is never silently eaten.
+let lastLongPressAt=0;
 function renderThumbs(){
   const box=$('#thumbs'); box.innerHTML='';
   state.photos.forEach(p=>{
@@ -1620,7 +1641,7 @@ function renderThumbs(){
       (state.selectMode?`<span class="checkmark${isMultiSel?' on':''}">${isMultiSel?'✓':''}</span>`:'');
     el.insertBefore(p.thumb,el.firstChild);
     el.onclick=()=>{
-      if(suppressThumbClick){ suppressThumbClick=false; return; }
+      if(Date.now()-lastLongPressAt<400) return;
       if(state.selectMode){
         if(state.multiSel.has(p.id)) state.multiSel.delete(p.id); else state.multiSel.add(p.id);
         updateSelectUI(); renderThumbs();
@@ -1633,7 +1654,7 @@ function renderThumbs(){
     el.addEventListener('pointerdown',()=>{
       lpTimer=setTimeout(()=>{
         if(!state.selectMode){
-          suppressThumbClick=true;
+          lastLongPressAt=Date.now();
           state.selectMode=true; state.multiSel.add(p.id);
           updateSelectUI(); renderThumbs();
         }

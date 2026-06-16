@@ -1,7 +1,7 @@
 {
-  "name": "WildmanDesigns — cull & develop",
+  "name": "WildmanDesigns — develop",
   "short_name": "WildmanDesigns",
-  "description": "Professional photo culling and non-destructive developing for nature photographers",
+  "description": "Professional non-destructive photo developing for nature photographers",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#15171C",
