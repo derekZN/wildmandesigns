@@ -131,6 +131,14 @@
   .rscroll{flex:1;overflow-y:auto}
   .grp-h{display:flex;align-items:center;justify-content:space-between;
     padding:11px 14px 5px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+  /* ---- edit panel category sub-tabs — split the long slider list into focused screens ---- */
+  .subtabs{display:flex;gap:6px;padding:10px 14px;overflow-x:auto;border-bottom:1px solid var(--line)}
+  .subtabs::-webkit-scrollbar{display:none}
+  .subtab{flex-shrink:0;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);
+    padding:6px 14px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap}
+  .subtab.on{background:var(--amber);color:#241a08;border-color:var(--amber)}
+  .subpanel{padding-top:4px;padding-bottom:8px}
   .slider{padding:5px 14px}
   .slider .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
   .slider label{font-size:12px;color:#c7ccd5}
@@ -466,69 +474,90 @@
         <button class="ghost" id="syncAll">Sync→All</button>
       </div>
 
-      <div class="grp-h">Light</div>
-      <div class="slider"><div class="top"><label>Exposure</label><span class="val" data-k="exposure">0.00</span></div><input type="range" data-k="exposure" min="-2" max="2" step="0.01" value="0"></div>
-      <div class="slider"><div class="top"><label>Contrast</label><span class="val" data-k="contrast">0</span></div><input type="range" data-k="contrast" min="-100" max="100" value="0"></div>
-      <div class="slider"><div class="top"><label>Highlights</label><span class="val" data-k="highlights">0</span></div><input type="range" data-k="highlights" min="-100" max="100" value="0"></div>
-      <div class="slider"><div class="top"><label>Shadows</label><span class="val" data-k="shadows">0</span></div><input type="range" data-k="shadows" min="-100" max="100" value="0"></div>
-      <div class="slider"><div class="top"><label>Whites</label><span class="val" data-k="whites">0</span></div><input type="range" data-k="whites" min="-100" max="100" value="0"></div>
-      <div class="slider"><div class="top"><label>Blacks</label><span class="val" data-k="blacks">0</span></div><input type="range" data-k="blacks" min="-100" max="100" value="0"></div>
-
-      <div class="grp-h">Color</div>
-      <div class="slider"><div class="top"><label>Temperature</label><span class="val" data-k="temp">0</span></div><input type="range" data-k="temp" min="-100" max="100" value="0"></div>
-      <div class="slider"><div class="top"><label>Tint</label><span class="val" data-k="tint">0</span></div><input type="range" data-k="tint" min="-100" max="100" value="0"></div>
-      <div class="slider"><div class="top"><label>Vibrance</label><span class="val" data-k="vibrance">0</span></div><input type="range" data-k="vibrance" min="-100" max="100" value="0"></div>
-      <div class="slider"><div class="top"><label>Saturation</label><span class="val" data-k="saturation">0</span></div><input type="range" data-k="saturation" min="-100" max="100" value="0"></div>
-
-      <div class="grp-h">Detail</div>
-      <div class="slider"><div class="top"><label>Clarity</label><span class="val" data-k="clarity">0</span></div><input type="range" data-k="clarity" min="-100" max="100" value="0"></div>
-      <div class="slider"><div class="top"><label>Sharpening</label><span class="val" data-k="sharpen">0</span></div><input type="range" data-k="sharpen" min="0" max="100" value="0"></div>
-
-      <div class="grp-h">Masks <span style="text-transform:none;letter-spacing:0;color:var(--faint)">local adjustments</span></div>
-      <div class="maskbtns">
-        <button class="ghost" id="addRadial">+ Radial</button>
-        <button class="ghost" id="addLinear">+ Grad</button>
-        <button class="ghost" id="addBrush">+ Brush</button>
+      <div class="subtabs" id="editSubtabs">
+        <button class="subtab on" data-tab="light">Light</button>
+        <button class="subtab" data-tab="color">Color</button>
+        <button class="subtab" data-tab="detail">Detail</button>
+        <button class="subtab" data-tab="curve">Curve</button>
+        <button class="subtab" data-tab="masks">Masks</button>
+        <button class="subtab" data-tab="looks">Looks</button>
+        <button class="subtab" data-tab="presets">Presets</button>
       </div>
-      <div class="masklist" id="maskList"></div>
-      <div id="maskEditor" class="hide">
-        <div id="brushControls" class="hide brushcontrols">
-          <div class="brushrow">
-            <button class="ghost bmode on" id="bmodePaint">Paint</button>
-            <button class="ghost bmode" id="bmodeErase">Erase</button>
-          </div>
-          <div class="slider"><div class="top"><label>Size</label><span class="val" id="bSizeVal">40</span></div><input type="range" id="brushSize" min="4" max="300" value="40"></div>
-          <div class="slider"><div class="top"><label>Hardness</label><span class="val" id="bHardVal">60</span></div><input type="range" id="brushHard" min="0" max="100" value="60"></div>
-          <div class="slider"><div class="top"><label>Flow</label><span class="val" id="bFlowVal">80</span></div><input type="range" id="brushFlow" min="1" max="100" value="80"></div>
-          <div class="maskbtns"><button class="ghost" id="clearBrush">Clear</button></div>
+
+      <div class="subpanel" data-panel="light">
+        <div class="slider"><div class="top"><label>Exposure</label><span class="val" data-k="exposure">0.00</span></div><input type="range" data-k="exposure" min="-2" max="2" step="0.01" value="0"></div>
+        <div class="slider"><div class="top"><label>Contrast</label><span class="val" data-k="contrast">0</span></div><input type="range" data-k="contrast" min="-100" max="100" value="0"></div>
+        <div class="slider"><div class="top"><label>Highlights</label><span class="val" data-k="highlights">0</span></div><input type="range" data-k="highlights" min="-100" max="100" value="0"></div>
+        <div class="slider"><div class="top"><label>Shadows</label><span class="val" data-k="shadows">0</span></div><input type="range" data-k="shadows" min="-100" max="100" value="0"></div>
+        <div class="slider"><div class="top"><label>Whites</label><span class="val" data-k="whites">0</span></div><input type="range" data-k="whites" min="-100" max="100" value="0"></div>
+        <div class="slider"><div class="top"><label>Blacks</label><span class="val" data-k="blacks">0</span></div><input type="range" data-k="blacks" min="-100" max="100" value="0"></div>
+      </div>
+
+      <div class="subpanel hide" data-panel="color">
+        <div class="slider"><div class="top"><label>Temperature</label><span class="val" data-k="temp">0</span></div><input type="range" data-k="temp" min="-100" max="100" value="0"></div>
+        <div class="slider"><div class="top"><label>Tint</label><span class="val" data-k="tint">0</span></div><input type="range" data-k="tint" min="-100" max="100" value="0"></div>
+        <div class="slider"><div class="top"><label>Vibrance</label><span class="val" data-k="vibrance">0</span></div><input type="range" data-k="vibrance" min="-100" max="100" value="0"></div>
+        <div class="slider"><div class="top"><label>Saturation</label><span class="val" data-k="saturation">0</span></div><input type="range" data-k="saturation" min="-100" max="100" value="0"></div>
+      </div>
+
+      <div class="subpanel hide" data-panel="detail">
+        <div class="slider"><div class="top"><label>Clarity</label><span class="val" data-k="clarity">0</span></div><input type="range" data-k="clarity" min="-100" max="100" value="0"></div>
+        <div class="slider"><div class="top"><label>Sharpening</label><span class="val" data-k="sharpen">0</span></div><input type="range" data-k="sharpen" min="0" max="100" value="0"></div>
+      </div>
+
+      <div class="subpanel hide" data-panel="curve">
+        <div class="grp-h">Tone curve <span style="text-transform:none;letter-spacing:0;color:var(--faint)">drag points · dbl-click to add</span></div>
+        <div class="curvewrap"><canvas id="curve" width="268" height="140"></canvas></div>
+      </div>
+
+      <div class="subpanel hide" data-panel="masks">
+        <div class="grp-h">Local adjustments</div>
+        <div class="maskbtns">
+          <button class="ghost" id="addRadial">+ Radial</button>
+          <button class="ghost" id="addLinear">+ Grad</button>
+          <button class="ghost" id="addBrush">+ Brush</button>
         </div>
-        <div class="slider"><div class="top"><label>Exposure</label><span class="val" data-mk="exposure">0.00</span></div><input type="range" data-mk="exposure" min="-2" max="2" step="0.01" value="0"></div>
-        <div class="slider"><div class="top"><label>Contrast</label><span class="val" data-mk="contrast">0</span></div><input type="range" data-mk="contrast" min="-100" max="100" value="0"></div>
-        <div class="slider"><div class="top"><label>Saturation</label><span class="val" data-mk="saturation">0</span></div><input type="range" data-mk="saturation" min="-100" max="100" value="0"></div>
-        <div class="slider"><div class="top"><label>Temperature</label><span class="val" data-mk="temp">0</span></div><input type="range" data-mk="temp" min="-100" max="100" value="0"></div>
-        <div class="slider"><div class="top"><label>Feather</label><span class="val" data-mk="feather">50</span></div><input type="range" data-mk="feather" min="1" max="100" value="50"></div>
-        <div class="maskbtns"><button class="ghost" id="invertMask">Invert</button><button class="ghost" id="deleteMask" style="color:var(--reject)">Delete mask</button></div>
+        <div class="masklist" id="maskList"></div>
+        <div id="maskEditor" class="hide">
+          <div id="brushControls" class="hide brushcontrols">
+            <div class="brushrow">
+              <button class="ghost bmode on" id="bmodePaint">Paint</button>
+              <button class="ghost bmode" id="bmodeErase">Erase</button>
+            </div>
+            <div class="slider"><div class="top"><label>Size</label><span class="val" id="bSizeVal">40</span></div><input type="range" id="brushSize" min="4" max="300" value="40"></div>
+            <div class="slider"><div class="top"><label>Hardness</label><span class="val" id="bHardVal">60</span></div><input type="range" id="brushHard" min="0" max="100" value="60"></div>
+            <div class="slider"><div class="top"><label>Flow</label><span class="val" id="bFlowVal">80</span></div><input type="range" id="brushFlow" min="1" max="100" value="80"></div>
+            <div class="maskbtns"><button class="ghost" id="clearBrush">Clear</button></div>
+          </div>
+          <div class="slider"><div class="top"><label>Exposure</label><span class="val" data-mk="exposure">0.00</span></div><input type="range" data-mk="exposure" min="-2" max="2" step="0.01" value="0"></div>
+          <div class="slider"><div class="top"><label>Contrast</label><span class="val" data-mk="contrast">0</span></div><input type="range" data-mk="contrast" min="-100" max="100" value="0"></div>
+          <div class="slider"><div class="top"><label>Saturation</label><span class="val" data-mk="saturation">0</span></div><input type="range" data-mk="saturation" min="-100" max="100" value="0"></div>
+          <div class="slider"><div class="top"><label>Temperature</label><span class="val" data-mk="temp">0</span></div><input type="range" data-mk="temp" min="-100" max="100" value="0"></div>
+          <div class="slider"><div class="top"><label>Feather</label><span class="val" data-mk="feather">50</span></div><input type="range" data-mk="feather" min="1" max="100" value="50"></div>
+          <div class="maskbtns"><button class="ghost" id="invertMask">Invert</button><button class="ghost" id="deleteMask" style="color:var(--reject)">Delete mask</button></div>
+        </div>
       </div>
 
-      <div class="grp-h">Tone curve <span style="text-transform:none;letter-spacing:0;color:var(--faint)">drag points · dbl-click to add</span></div>
-      <div class="curvewrap"><canvas id="curve" width="268" height="140"></canvas></div>
-
-      <div class="grp-h">Built-in looks <span style="text-transform:none;letter-spacing:0;color:var(--faint)">tap to apply</span></div>
-      <div id="lookGrid"></div>
-
-      <div class="grp-h">Your presets
-        <span>
-          <button class="preset" style="display:inline;border:0;background:0;color:var(--amber);padding:0" id="savePreset">+ Save current</button>
-        </span>
+      <div class="subpanel hide" data-panel="looks">
+        <div class="grp-h">Built-in looks <span style="text-transform:none;letter-spacing:0;color:var(--faint)">tap to apply</span></div>
+        <div id="lookGrid"></div>
       </div>
-      <div class="presets" id="presetList"></div>
-      <div class="panel-actions" style="border-top:1px solid var(--line);border-bottom:0">
-        <button class="btn" id="exportPresets" style="flex:1;justify-content:center">Export .json</button>
-        <button class="btn" id="importPresets" style="flex:1;justify-content:center">Import .json</button>
+
+      <div class="subpanel hide" data-panel="presets">
+        <div class="grp-h">Your presets
+          <span>
+            <button class="preset" style="display:inline;border:0;background:0;color:var(--amber);padding:0" id="savePreset">+ Save current</button>
+          </span>
+        </div>
+        <div class="presets" id="presetList"></div>
+        <div class="panel-actions" style="border-top:1px solid var(--line);border-bottom:0">
+          <button class="btn" id="exportPresets" style="flex:1;justify-content:center">Export .json</button>
+          <button class="btn" id="importPresets" style="flex:1;justify-content:center">Import .json</button>
+        </div>
+        <div class="mini">Adjust the selected frame, save a look as a preset, then apply it to one
+          frame or the whole batch from the Export dialog. Looks are pure math now; learned-from-your-edits
+          styling lands in a later phase.</div>
       </div>
-      <div class="mini">Adjust the selected frame, save a look as a preset, then apply it to one
-        frame or the whole batch from the Export dialog. Looks are pure math now; learned-from-your-edits
-        styling lands in a later phase.</div>
     </div>
   </div>
 </main>
@@ -1375,6 +1404,16 @@ function syncSliders(){
   const p=sel(); if(!p)return;
   $$('input[type=range][data-k]').forEach(inp=>{ inp.value=p.adj[inp.dataset.k]; updateValLabel(inp.dataset.k); });
 }
+
+/* ============================================================
+   EDIT PANEL SUB-TABS — Light / Color / Detail / Curve / Masks / Looks / Presets
+   ============================================================ */
+function showEditSubtab(tab){
+  $$('.subtab').forEach(b=>b.classList.toggle('on', b.dataset.tab===tab));
+  $$('.subpanel').forEach(s=>s.classList.toggle('hide', s.dataset.panel!==tab));
+  const panel=$('#editPanel'); if(panel) panel.scrollTop=0;
+}
+$$('.subtab').forEach(b=>b.onclick=()=>showEditSubtab(b.dataset.tab));
 
 /* ============================================================
    TONE CURVE editor
@@ -2310,28 +2349,17 @@ function mobTab(tab){
     right.classList.add('mob-show');
     stage.classList.add('sheet-open');
     $('#tabEdit').classList.add('on');
-    // scroll to top of sliders
-    const p = $('#editPanel'); if(p) p.scrollTop = 0;
+    showEditSubtab('light');
   } else if(tab === 'looks'){
     right.classList.add('mob-show');
     stage.classList.add('sheet-open');
     $('#tabLooks').classList.add('on');
-    // scroll to looks section
-    const panel = $('#editPanel'), target = $('#lookGrid');
-    if(panel && target){
-      const pr = panel.getBoundingClientRect(), tr = target.getBoundingClientRect();
-      panel.scrollTop += tr.top - pr.top - 8;
-    }
+    showEditSubtab('looks');
   } else if(tab === 'masks'){
     right.classList.add('mob-show');
     stage.classList.add('sheet-open');
     $('#tabMasks').classList.add('on');
-    // scroll to masks section
-    const panel = $('#editPanel'), target = $('#maskList');
-    if(panel && target){
-      const pr = panel.getBoundingClientRect(), tr = target.getBoundingClientRect();
-      panel.scrollTop += tr.top - pr.top - 40;
-    }
+    showEditSubtab('masks');
   } else {
     $('#tabView').classList.add('on');
   }
