@@ -84,6 +84,12 @@
   .right{border-left:1px solid var(--line);background:var(--panel)}
   .center{background:var(--bg);position:relative}
 
+  /* ---- filmstrip toolbar ---- */
+  .filmtools{display:flex;align-items:center;gap:6px;padding:8px 10px;
+    border-bottom:1px solid var(--line);flex:0 0 auto}
+  .filmtools .ghost{padding:5px 10px;font-size:11px;min-height:0}
+  .filmcount{font-size:11px;color:var(--muted);font-family:var(--mono);white-space:nowrap}
+
   /* ---- filmstrip / grid ---- */
   .thumbs{flex:1;overflow-y:auto;padding:8px;display:grid;
     grid-template-columns:1fr 1fr;gap:8px;align-content:start}
@@ -94,6 +100,10 @@
   .thumb .nm{position:absolute;bottom:0;left:0;right:0;font-size:9px;color:var(--thumb-ink);
     padding:8px 5px 3px;background:linear-gradient(transparent,rgba(0,0,0,.8));
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .thumb .checkmark{position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:50%;
+    border:1.5px solid rgba(255,255,255,.85);background:rgba(0,0,0,.4);display:flex;
+    align-items:center;justify-content:center;font-size:11px;color:#fff;font-weight:800;z-index:2}
+  .thumb .checkmark.on{background:var(--sel);border-color:var(--sel)}
 
   /* ---- center stage ---- */
   .stage{flex:1;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;padding:18px;transition:padding .2s ease}
@@ -246,12 +256,14 @@
     /* left panel: horizontal filmstrip slides down from top */
     .col.left{
       position:absolute;top:0;left:0;right:0;
-      height:100px;z-index:6;display:none;
+      height:134px;z-index:6;display:none;
       flex-direction:column;
       background:var(--panel);
       border-bottom:1px solid var(--line);
       box-shadow:0 6px 24px rgba(0,0,0,.45)
     }
+    .filmtools{padding:6px 10px}
+    .filmtools .ghost{padding:4px 9px;font-size:10.5px}
     .col.left.mob-show{display:flex}
     .thumbs{
       display:flex;flex-direction:row;
@@ -290,7 +302,7 @@
 
     /* shrink the visible photo area so it's never hidden behind an open panel */
     .stage.sheet-open{padding-bottom:42vh}
-    .stage.strip-open{padding-top:108px}
+    .stage.strip-open{padding-top:142px}
 
     /* tighter panel content so more fits in the smaller sheet */
     .histwrap{padding:8px 14px 4px}
@@ -376,6 +388,14 @@
 <main>
   <!-- LEFT -->
   <div class="col left">
+    <div class="filmtools" id="filmtools">
+      <span class="filmcount" id="filmCount"></span>
+      <div class="spacer"></div>
+      <button class="ghost hide" id="selAllBtn">All</button>
+      <button class="ghost hide" id="selExportBtn">Export</button>
+      <button class="ghost hide" id="selDeleteBtn" style="color:var(--reject)">Delete</button>
+      <button class="ghost" id="selectModeBtn">Select</button>
+    </div>
     <div class="thumbs" id="thumbs"></div>
   </div>
 
@@ -407,6 +427,7 @@
       <button class="ghost" id="beforeBtn">Before <kbd>B</kbd></button>
       <button class="ghost" id="cropBtn">Crop</button>
       <button class="ghost" id="spotBtn">Spot</button>
+      <button class="ghost" id="deleteBtn" style="color:var(--reject)">Delete</button>
     </div>
     <div class="cropstrip hide" id="cropstrip">
       <label>Straighten</label>
@@ -598,6 +619,8 @@ const state = {
   cropMode: false,
   cropSnap: null,   // snapshot for cancel
   _cropView: null,  // {scale,rotW,rotH,cw,ch} set during renderStageTransform
+  selectMode: false,
+  multiSel: new Set(),
 };
 const MASK_ADJ = {exposure:0, contrast:0, saturation:0, temp:0};
 let uid = 1, maskUid = 1, spotUid = 1;
@@ -1518,17 +1541,81 @@ async function exportList(list){
 /* ============================================================
    THUMBNAILS + FILTERS + SELECTION
    ============================================================ */
+let suppressThumbClick=false;
 function renderThumbs(){
   const box=$('#thumbs'); box.innerHTML='';
   state.photos.forEach(p=>{
     const el=document.createElement('div');
-    el.className='thumb'+(p.id===state.selId?' sel':'');
-    el.innerHTML=`<span class="nm">${p.name}</span>`;
+    const isMultiSel=state.multiSel.has(p.id);
+    el.className='thumb'+(p.id===state.selId&&!state.selectMode?' sel':'')+(isMultiSel?' sel':'');
+    el.innerHTML=`<span class="nm">${p.name}</span>`+
+      (state.selectMode?`<span class="checkmark${isMultiSel?' on':''}">${isMultiSel?'✓':''}</span>`:'');
     el.insertBefore(p.thumb,el.firstChild);
-    el.onclick=()=>{ state.selId=p.id; onPhotoChanged(); renderThumbs(); renderStage(); syncSliders(); drawCurve(); renderLooks(); updateChrome(); mobTab('view'); };
+    el.onclick=()=>{
+      if(suppressThumbClick){ suppressThumbClick=false; return; }
+      if(state.selectMode){
+        if(state.multiSel.has(p.id)) state.multiSel.delete(p.id); else state.multiSel.add(p.id);
+        updateSelectUI(); renderThumbs();
+        return;
+      }
+      state.selId=p.id; onPhotoChanged(); renderThumbs(); renderStage(); syncSliders(); drawCurve(); renderLooks(); updateChrome(); mobTab('view');
+    };
+    // long-press to enter select mode with this photo pre-selected
+    let lpTimer=null;
+    el.addEventListener('pointerdown',()=>{
+      lpTimer=setTimeout(()=>{
+        if(!state.selectMode){
+          suppressThumbClick=true;
+          state.selectMode=true; state.multiSel.add(p.id);
+          updateSelectUI(); renderThumbs();
+        }
+      },480);
+    });
+    ['pointerup','pointerleave','pointercancel'].forEach(ev=>el.addEventListener(ev,()=>clearTimeout(lpTimer)));
     box.appendChild(el);
   });
+  updateSelectUI();
 }
+
+function updateSelectUI(){
+  const n=state.multiSel.size;
+  $('#selectModeBtn').textContent = state.selectMode ? 'Cancel' : 'Select';
+  $('#selAllBtn').classList.toggle('hide', !state.selectMode);
+  $('#selExportBtn').classList.toggle('hide', !state.selectMode||n===0);
+  $('#selDeleteBtn').classList.toggle('hide', !state.selectMode||n===0);
+  $('#filmCount').textContent = state.selectMode
+    ? n+' selected'
+    : state.photos.length+' photo'+(state.photos.length!==1?'s':'');
+}
+
+$('#selectModeBtn').onclick=()=>{
+  state.selectMode=!state.selectMode;
+  if(!state.selectMode) state.multiSel.clear();
+  updateSelectUI(); renderThumbs();
+};
+$('#selAllBtn').onclick=()=>{
+  if(state.multiSel.size===state.photos.length) state.multiSel.clear();
+  else state.photos.forEach(p=>state.multiSel.add(p.id));
+  updateSelectUI(); renderThumbs();
+};
+$('#selExportBtn').onclick=()=>{
+  const list=state.photos.filter(p=>state.multiSel.has(p.id));
+  if(!list.length){ toast('No photos selected'); return; }
+  exportList(list);
+};
+$('#selDeleteBtn').onclick=()=>{
+  const ids=[...state.multiSel];
+  if(!ids.length){ toast('No photos selected'); return; }
+  if(!confirm(`Delete ${ids.length} photo${ids.length>1?'s':''}? This can't be undone.`)) return;
+  state.selectMode=false;
+  deletePhotos(ids);
+  updateSelectUI();
+};
+$('#deleteBtn').onclick=()=>{
+  const p=sel(); if(!p) return;
+  if(!confirm(`Delete "${p.name}"? This can't be undone.`)) return;
+  deletePhotos([p.id]);
+};
 
 /* ---------- nav ---------- */
 function move(dir){
@@ -2182,6 +2269,23 @@ function onPhotoChanged(){ state.activeMask=-1; state.view.mode='fit';
     $('#cropBtn').classList.remove('active'); $('#cropstrip').classList.add('hide'); }
   closeMaskEditor(); updateZoomBtn(); renderMasks(); updateUndoButtons(); }
 
+/* ---------- delete photos (removes from memory + on-device storage) ---------- */
+function deletePhotos(ids){
+  const idSet=new Set(ids);
+  state.photos.forEach(p=>{ if(idSet.has(p.id)&&p.bitmap&&p.bitmap.close) p.bitmap.close(); });
+  state.photos=state.photos.filter(p=>!idSet.has(p.id));
+  if(!IS_ELECTRON) ids.forEach(id=>{ idbDelete('files',id); idbDelete('edits',id); });
+  state.multiSel.forEach(id=>{ if(idSet.has(id)) state.multiSel.delete(id); });
+  if(idSet.has(state.selId)){
+    state.selId = state.photos.length ? state.photos[0].id : null;
+    onPhotoChanged();
+  }
+  renderThumbs(); renderStage(); renderLooks(); updateChrome();
+  syncSliders(); drawCurve(); renderMasks();
+  scheduleSessionSave();
+  toast('Deleted '+ids.length+' photo'+(ids.length>1?'s':''));
+}
+
 /* ---------- boot ---------- */
 renderPresets(); drawCurve(); renderLooks(); updateChrome(); updateZoomBtn(); updateUndoButtons();
 
@@ -2334,6 +2438,13 @@ function idbGet(store,key){
     const req=db.transaction(store,'readonly').objectStore(store).get(key);
     req.onsuccess=()=>resolve(req.result); req.onerror=()=>reject(req.error);
   })).catch(()=>undefined);
+}
+function idbDelete(store,key){
+  return idbOpen().then(db=>new Promise((resolve,reject)=>{
+    const tx=db.transaction(store,'readwrite');
+    tx.objectStore(store).delete(key);
+    tx.oncomplete=()=>resolve(); tx.onerror=()=>reject(tx.error);
+  })).catch(err=>console.warn('idbDelete failed',store,err));
 }
 
 async function saveSessionIDB(){
