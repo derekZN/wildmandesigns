@@ -767,10 +767,33 @@ function extractEmbeddedJpeg(buffer){
   return buffer.slice(best.offset, best.offset + best.length);
 }
 
+// Fallback for cameras whose IFD layout the tag walker above doesn't match:
+// scan the raw bytes for JPEG SOI/EOI markers directly and keep the largest one found.
+function scanForJpeg(buffer){
+  const view=new DataView(buffer);
+  const len=buffer.byteLength;
+  let bestOff=-1, bestLen=0, i=0;
+  while(i<len-3){
+    if(view.getUint8(i)===0xFF && view.getUint8(i+1)===0xD8 && view.getUint8(i+2)===0xFF){
+      let j=i+2, found=false;
+      while(j<len-1){
+        if(view.getUint8(j)===0xFF && view.getUint8(j+1)===0xD9){
+          const length=j+2-i;
+          if(length>bestLen){ bestLen=length; bestOff=i; }
+          i=j+2; found=true; break;
+        }
+        j++;
+      }
+      if(!found) break;
+    } else { i++; }
+  }
+  return bestOff<0 ? null : buffer.slice(bestOff,bestOff+bestLen);
+}
+
 async function loadRawBitmap(file){
   const buffer = await file.arrayBuffer();
-  const jpegBuf = extractEmbeddedJpeg(buffer);
-  if(!jpegBuf) throw new Error('No embedded JPEG found in ' + file.name);
+  const jpegBuf = extractEmbeddedJpeg(buffer) || scanForJpeg(buffer);
+  if(!jpegBuf) throw new Error('No embedded JPEG preview found in ' + file.name);
   const blob = new Blob([jpegBuf], { type: 'image/jpeg' });
   return createImageBitmap(blob, { imageOrientation: 'from-image' });
 }
@@ -779,6 +802,7 @@ async function addFiles(files){
   files=files.filter(f=>isSupportedFile(f));
   if(!files.length){ toast('Unsupported format — use JPEG, PNG, WebP or RAW (NEF/CR2/ARW/DNG/ORF)'); return; }
   busy(true,'Importing '+files.length+' photo'+(files.length>1?'s':''));
+  let added=0; const failed=[];
   for(const f of files){
     try{
       const bmp = isRawFile(f)
@@ -791,14 +815,19 @@ async function addFiles(files){
       makeThumb(p);
       state.photos.push(p);
       if(!IS_ELECTRON) idbPut('files',{id:p.id,name:p.name,blob:f});
-    }catch(err){ console.warn('decode failed',f.name,err); }
+      added++;
+    }catch(err){ console.warn('decode failed',f.name,err); failed.push(f.name); }
     await wait(0);
   }
   if(!state.selId && state.photos.length){ state.selId=state.photos[0].id; onPhotoChanged(); }
   busy(false);
   renderThumbs(); renderStage(); renderLooks(); updateChrome();
   scheduleSessionSave();
-  toast(state.photos.length+' photo'+(state.photos.length>1?'s':'')+' loaded');
+  if(failed.length){
+    toast(added+' loaded, '+failed.length+' failed: '+failed.slice(0,3).join(', ')+(failed.length>3?'…':''));
+  } else {
+    toast(added+' photo'+(added!==1?'s':'')+' loaded');
+  }
 }
 
 function makeThumb(p){
