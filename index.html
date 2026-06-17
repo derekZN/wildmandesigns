@@ -365,7 +365,7 @@
     /* keep toasts clear of the bottom nav bar */
     .toast{bottom:calc(70px + env(safe-area-inset-bottom))}
   }
-  .thumb-rating{position:absolute;bottom:14px;left:4px;font-size:10px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+  .thumb-rating{position:absolute;bottom:20px;left:4px;font-size:9px;color:var(--amber);text-shadow:0 1px 3px rgba(0,0,0,.9);letter-spacing:1px}
   .thumb-flag-pick{position:absolute;top:4px;left:4px;width:8px;height:8px;border-radius:50%;background:var(--pick)}
   .thumb-flag-reject{position:absolute;top:4px;left:4px;width:8px;height:8px;border-radius:50%;background:var(--reject)}
   .compare-line{position:absolute;top:0;bottom:0;width:3px;background:rgba(255,255,255,.85);cursor:ew-resize;z-index:5;transform:translateX(-50%)}
@@ -417,6 +417,7 @@
         <option value="rating-asc">Rating ↑</option>
       </select>
       <button class="ghost" id="filterBtn" style="padding:5px 9px;font-size:11px;min-height:0">All</button>
+      <button class="ghost" id="showCollectionsBtn" title="Collections" style="padding:5px 9px;font-size:11px;min-height:0">☰</button>
       <div class="spacer"></div>
       <button class="ghost hide" id="selAllBtn">All</button>
       <button class="ghost hide" id="selExportBtn">Export</button>
@@ -1020,13 +1021,19 @@ async function addFiles(files){
         _undo:[], _redo:[],
         rating:0, flag:0, exif:{}, collections:new Set() };
       makeThumb(p);
-      // Try to extract EXIF from JPEG files
-      if(!isRawFile(f)&&!HEIC_EXT.test(f.name)){
-        try{
+      // Try to extract EXIF data
+      try{
+        if(isRawFile(f)){
+          // For RAW files, EXIF lives in the embedded JPEG — parse the raw buffer
+          const ab=await f.arrayBuffer();
+          const jpegBuf=extractEmbeddedJpeg(ab)||scanForJpeg(ab);
+          if(jpegBuf) p.exif=extractExif(jpegBuf);
+        } else if(!HEIC_EXT.test(f.name)){
+          // JPEG/PNG/WebP — read just the first 64 KB (enough for EXIF app segments)
           const ab=await f.slice(0,65536).arrayBuffer();
           p.exif=extractExif(ab);
-        }catch{}
-      }
+        }
+      }catch{}
       state.photos.push(p);
       if(!IS_ELECTRON) idbPut('files',{id:p.id,name:p.name,blob:f});
       added++;
@@ -1666,6 +1673,8 @@ function renderStageTransform(p, availW, availH){
     if(!state.showBefore){
       const img=vctx.getImageData(0,0,pcw1,pch1);
       processImageData(img,p.adj); vctx.putImageData(img,0,0);
+      if(p.adj.distort||p.adj.vignette2) applyLensCorrections(viewCanvas,p.adj);
+      if(p.adj.vertPersp||p.adj.horizPersp) applyPerspective(viewCanvas,p.adj);
     }
     displayCanvas.width=pcwF1; displayCanvas.height=pchF1;
     displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
@@ -1694,6 +1703,8 @@ function renderStageTransform(p, availW, availH){
       applyMasks(img,p,crop.l*rotW,crop.t*rotH,cropW*1,cropH*1);
       applySpots(img,p,crop.l*rotW,crop.t*rotH,cropW*1,cropH*1);
       vctx.putImageData(img,0,0);
+      if(p.adj.distort||p.adj.vignette2) applyLensCorrections(viewCanvas,p.adj);
+      if(p.adj.vertPersp||p.adj.horizPersp) applyPerspective(viewCanvas,p.adj);
     }
     displayCanvas.width=pcwF2; displayCanvas.height=pchF2;
     displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
@@ -1703,6 +1714,7 @@ function renderStageTransform(p, availW, availH){
   }
   overlay.width=cw; overlay.height=ch; overlay.style.width=cw+'px'; overlay.style.height=ch+'px';
   drawOverlay(); drawHistogram(p);
+  if(state.compareMode&&!state.showBefore) drawCompareSplit();
 }
 
 function renderStage(){
@@ -1746,6 +1758,8 @@ function renderStage(){
     applyMasks(img,p,sx,sy,sw,sh);
     applySpots(img,p,sx,sy,sw,sh);
     vctx.putImageData(img,0,0);
+    if(p.adj.distort||p.adj.vignette2) applyLensCorrections(viewCanvas,p.adj);
+    if(p.adj.vertPersp||p.adj.horizPersp) applyPerspective(viewCanvas,p.adj);
   }
   displayCanvas.width=pcwF; displayCanvas.height=pchF;
   displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
@@ -3445,11 +3459,14 @@ $('#addCollectionBtn').onclick=()=>{
   renderCollections();
   toast('Collection "'+name+'" created');
 };
-$('#toggleCollectionsBtn').onclick=()=>{
+function toggleCollectionsPanel(){
   const panel=$('#collectionsPanel');
   const shown=panel.style.display==='flex';
   panel.style.display=shown?'none':'flex';
-};
+  const colBtn=$('#showCollectionsBtn'); if(colBtn) colBtn.classList.toggle('active',!shown);
+}
+$('#toggleCollectionsBtn').onclick=toggleCollectionsPanel;
+$('#showCollectionsBtn').onclick=toggleCollectionsPanel;
 function renderCollections(){
   const box=$('#collectionList'); if(!box)return;
   box.innerHTML='';
