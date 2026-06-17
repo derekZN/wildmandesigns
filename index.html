@@ -130,7 +130,8 @@
     padding:11px 14px 5px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 
   /* ---- edit panel category sub-tabs — split the long slider list into focused screens ---- */
-  .subtabs{display:flex;gap:6px;padding:10px 14px;overflow-x:auto;border-bottom:1px solid var(--line)}
+  .subtabs{display:flex;gap:6px;padding:10px 14px;overflow-x:auto;border-bottom:1px solid var(--line);
+    position:sticky;top:0;background:var(--panel);z-index:2}
   .subtabs::-webkit-scrollbar{display:none}
   .subtab{flex-shrink:0;border:1px solid var(--line);background:var(--panel-2);color:var(--muted);
     padding:6px 14px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap}
@@ -280,7 +281,6 @@
       box-shadow:0 6px 24px rgba(0,0,0,.45)
     }
     .filmtools{padding:6px 10px}
-    .filmtools .ghost{padding:4px 9px;font-size:10.5px}
     .col.left.mob-show{display:flex}
     .thumbs{
       display:flex;flex-direction:row;
@@ -337,6 +337,35 @@
     input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
     input[type=range]::-moz-range-thumb{width:22px;height:22px}
 
+    /* spot strip — horizontal scroll so size slider & mode buttons fit */
+    .spotstrip{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;height:auto;min-height:38px;padding:6px 12px}
+    .spotstrip::-webkit-scrollbar{display:none}
+    .spotstrip label,.spotstrip .ssval{flex-shrink:0}
+    .spotstrip input[type=range]{width:80px;flex-shrink:0}
+    .spotstrip .ghost{flex-shrink:0;padding:5px 9px;min-height:0;font-size:10.5px}
+
+    /* filmstrip toolbar — scrolls horizontally, keep buttons slim */
+    #filmtools{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+    #filmtools::-webkit-scrollbar{display:none}
+    .filmtools .ghost{padding:4px 9px;font-size:10.5px;min-height:0;flex-shrink:0}
+    #sortSel{flex-shrink:0}
+    /* collections panel overlays the stage rather than pushing filmstrip content */
+    #collectionsPanel{position:absolute;top:134px;left:0;right:0;z-index:7;
+      background:var(--panel);border-bottom:1px solid var(--line);
+      box-shadow:0 6px 20px rgba(0,0,0,.4);max-height:180px;overflow-y:auto}
+
+    /* cropstrip — scrolls horizontally on mobile */
+    .cropstrip{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;height:auto;min-height:44px;padding:6px 12px}
+    .cropstrip::-webkit-scrollbar{display:none}
+    .cropstrip label,.cropstrip .csval{flex-shrink:0}
+    .cropstrip input[type=range]{width:80px;flex-shrink:0}
+    .cropstrip .ghost{flex-shrink:0;padding:5px 9px;min-height:0;font-size:10.5px}
+    .cropstrip .btn{flex-shrink:0;padding:5px 9px;min-height:0;font-size:10.5px}
+
+    /* edit panel subtabs — tighter pills to show more tabs */
+    .subtabs{gap:4px;padding:8px 10px}
+    .subtab{padding:5px 10px;font-size:11px}
+
     /* stagebar — compact pills, scrolls horizontally */
     .stagebar kbd{display:none}
     .stagebar{overflow-x:auto;gap:5px;padding:6px 8px;height:auto;min-height:0}
@@ -369,6 +398,7 @@
   .thumb-flag-pick{position:absolute;top:4px;left:4px;width:8px;height:8px;border-radius:50%;background:var(--pick)}
   .thumb-flag-reject{position:absolute;top:4px;left:4px;width:8px;height:8px;border-radius:50%;background:var(--reject)}
   .compare-line{position:absolute;top:0;bottom:0;width:3px;background:rgba(255,255,255,.85);cursor:ew-resize;z-index:5;transform:translateX(-50%)}
+  .compare-line::before{content:'';position:absolute;inset:-4px -16px;}
 </style>
 </head>
 <body>

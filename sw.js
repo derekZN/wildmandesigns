@@ -1,5 +1,5 @@
 /* WildmanDesigns service worker — cache-first, offline-capable */
-const CACHE = 'wildman-v14';
+const CACHE = 'wildman-v15';
 const PRECACHE = ['./index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {
