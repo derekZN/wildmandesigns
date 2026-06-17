@@ -77,7 +77,11 @@
   /* ---- body grid ---- */
   main{flex:1;display:grid;grid-template-columns:auto 1fr 296px;min-height:0}
   .col{min-height:0;display:flex;flex-direction:column;overflow:hidden}
-  .right{border-left:1px solid var(--line);background:var(--panel)}
+  .right{border-left:1px solid var(--line);background:var(--panel);position:relative;transition:width .2s,flex-basis .2s}
+  .rpanel-toggle{position:absolute;left:-14px;top:50%;transform:translateY(-50%);width:14px;height:52px;background:var(--panel-2);border:1px solid var(--line);border-right:0;border-radius:7px 0 0 7px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5;color:var(--muted);font-size:9px;padding:0;transition:color .12s}
+  .rpanel-toggle:hover{color:var(--ink)}
+  .col.right.rp-closed{width:0;flex:0 0 0;overflow:hidden;border-left:0}
+  main.rp-collapsed{grid-template-columns:auto 1fr 0}
   .center{background:var(--bg);position:relative}
 
   /* ---- filmbar — horizontal strip below the editing area ---- */
@@ -343,6 +347,7 @@
   .mob-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
   .mob-tab.on{color:var(--amber);box-shadow:inset 0 3px 0 0 var(--amber)}
   .toast{bottom:calc(70px + env(safe-area-inset-bottom))}
+  .rpanel-toggle{display:none}
   }
   .thumb-rating{position:absolute;bottom:20px;left:4px;font-size:9px;color:var(--amber);text-shadow:0 1px 3px rgba(0,0,0,.9);letter-spacing:1px}
   .thumb-flag-pick{position:absolute;top:4px;left:4px;width:8px;height:8px;border-radius:50%;background:var(--pick)}
@@ -459,6 +464,7 @@
 
   <!-- RIGHT -->
   <div class="col right">
+    <button class="rpanel-toggle" id="rPanelToggle" title="Hide / show panel">›</button>
     <div class="sheet-handle"></div>
     <div id="editPanel" class="rscroll">
       <div class="histwrap"><canvas id="hist" width="268" height="64"></canvas>
@@ -477,42 +483,22 @@
       <!-- ACCORDION SECTIONS -->
 
       <div class="acc-section open" data-sec="light">
-        <button class="acc-head"><span class="acc-label">Light</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
+        <button class="acc-head"><span class="acc-label">Basic</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
         <div class="acc-body">
+          <div class="slider"><div class="top"><label>Temperature</label><span class="val" data-k="temp">0</span></div><input type="range" data-k="temp" min="-100" max="100" value="0"></div>
+          <div class="slider"><div class="top"><label>Tint</label><span class="val" data-k="tint">0</span></div><input type="range" data-k="tint" min="-100" max="100" value="0"></div>
+          <div class="divider"></div>
           <div class="slider"><div class="top"><label>Exposure</label><span class="val" data-k="exposure">0.00</span></div><input type="range" data-k="exposure" min="-2" max="2" step="0.01" value="0"></div>
           <div class="slider"><div class="top"><label>Contrast</label><span class="val" data-k="contrast">0</span></div><input type="range" data-k="contrast" min="-100" max="100" value="0"></div>
           <div class="slider"><div class="top"><label>Highlights</label><span class="val" data-k="highlights">0</span></div><input type="range" data-k="highlights" min="-100" max="100" value="0"></div>
           <div class="slider"><div class="top"><label>Shadows</label><span class="val" data-k="shadows">0</span></div><input type="range" data-k="shadows" min="-100" max="100" value="0"></div>
           <div class="slider"><div class="top"><label>Whites</label><span class="val" data-k="whites">0</span></div><input type="range" data-k="whites" min="-100" max="100" value="0"></div>
           <div class="slider"><div class="top"><label>Blacks</label><span class="val" data-k="blacks">0</span></div><input type="range" data-k="blacks" min="-100" max="100" value="0"></div>
-        </div>
-      </div>
-
-      <div class="acc-section" data-sec="color">
-        <button class="acc-head"><span class="acc-label">Color</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
-        <div class="acc-body">
-          <div class="slider"><div class="top"><label>Temperature</label><span class="val" data-k="temp">0</span></div><input type="range" data-k="temp" min="-100" max="100" value="0"></div>
-          <div class="slider"><div class="top"><label>Tint</label><span class="val" data-k="tint">0</span></div><input type="range" data-k="tint" min="-100" max="100" value="0"></div>
+          <div class="divider"></div>
+          <div class="slider"><div class="top"><label>Clarity</label><span class="val" data-k="clarity">0</span></div><input type="range" data-k="clarity" min="-100" max="100" value="0"></div>
+          <div class="slider"><div class="top"><label>Dehaze</label><span class="val" data-k="dehaze">0</span></div><input type="range" data-k="dehaze" min="-100" max="100" value="0"></div>
           <div class="slider"><div class="top"><label>Vibrance</label><span class="val" data-k="vibrance">0</span></div><input type="range" data-k="vibrance" min="-100" max="100" value="0"></div>
           <div class="slider"><div class="top"><label>Saturation</label><span class="val" data-k="saturation">0</span></div><input type="range" data-k="saturation" min="-100" max="100" value="0"></div>
-        </div>
-      </div>
-
-      <div class="acc-section" data-sec="grading">
-        <button class="acc-head"><span class="acc-label">Color Grading</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
-        <div class="acc-body">
-          <div class="slider"><div class="top"><label>Shadow Hue</label><span class="val" id="stShadowHueVal">0</span></div><input type="range" id="stShadowHue" min="0" max="360" value="0"></div>
-          <div class="slider"><div class="top"><label>Shadow Sat</label><span class="val" id="stShadowSatVal">0</span></div><input type="range" id="stShadowSat" min="0" max="100" value="0"></div>
-          <div class="slider"><div class="top"><label>Highlight Hue</label><span class="val" id="stHighlightHueVal">0</span></div><input type="range" id="stHighlightHue" min="0" max="360" value="0"></div>
-          <div class="slider"><div class="top"><label>Highlight Sat</label><span class="val" id="stHighlightSatVal">0</span></div><input type="range" id="stHighlightSat" min="0" max="100" value="0"></div>
-          <div class="slider"><div class="top"><label>Balance</label><span class="val" id="stBalanceVal">0</span></div><input type="range" id="stBalance" min="-100" max="100" value="0"></div>
-        </div>
-      </div>
-
-      <div class="acc-section" data-sec="hsl" id="hslPanel">
-        <button class="acc-head"><span class="acc-label">HSL / Color Mixer</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
-        <div class="acc-body" id="hslBody">
-          <!-- dynamically built by renderHSLPanel() -->
         </div>
       </div>
 
@@ -529,31 +515,53 @@
         </div>
       </div>
 
-      <div class="acc-section" data-sec="detail">
-        <button class="acc-head"><span class="acc-label">Detail</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
-        <div class="acc-body">
-          <div class="slider"><div class="top"><label>Clarity</label><span class="val" data-k="clarity">0</span></div><input type="range" data-k="clarity" min="-100" max="100" value="0"></div>
-          <div class="slider"><div class="top"><label>Sharpening</label><span class="val" data-k="sharpen">0</span></div><input type="range" data-k="sharpen" min="0" max="100" value="0"></div>
-          <div class="slider"><div class="top"><label>Dehaze</label><span class="val" data-k="dehaze">0</span></div><input type="range" data-k="dehaze" min="-100" max="100" value="0"></div>
-          <div class="slider"><div class="top"><label>Luminance NR</label><span class="val" data-k="denoiseL">0</span></div><input type="range" data-k="denoiseL" min="0" max="100" value="0"></div>
-          <div class="slider"><div class="top"><label>Color NR</label><span class="val" data-k="denoiseC">0</span></div><input type="range" data-k="denoiseC" min="0" max="100" value="0"></div>
+      <div class="acc-section" data-sec="hsl" id="hslPanel">
+        <button class="acc-head"><span class="acc-label">HSL / Color Mixer</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
+        <div class="acc-body" id="hslBody">
+          <!-- dynamically built by renderHSLPanel() -->
         </div>
       </div>
 
-      <div class="acc-section" data-sec="optics">
-        <button class="acc-head"><span class="acc-label">Optics</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
+      <div class="acc-section" data-sec="grading">
+        <button class="acc-head"><span class="acc-label">Color Grading</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
         <div class="acc-body">
-          <div class="grp-h" style="padding-top:8px">Lens Corrections</div>
+          <div class="slider"><div class="top"><label>Shadow Hue</label><span class="val" id="stShadowHueVal">0</span></div><input type="range" id="stShadowHue" min="0" max="360" value="0"></div>
+          <div class="slider"><div class="top"><label>Shadow Sat</label><span class="val" id="stShadowSatVal">0</span></div><input type="range" id="stShadowSat" min="0" max="100" value="0"></div>
+          <div class="slider"><div class="top"><label>Highlight Hue</label><span class="val" id="stHighlightHueVal">0</span></div><input type="range" id="stHighlightHue" min="0" max="360" value="0"></div>
+          <div class="slider"><div class="top"><label>Highlight Sat</label><span class="val" id="stHighlightSatVal">0</span></div><input type="range" id="stHighlightSat" min="0" max="100" value="0"></div>
+          <div class="slider"><div class="top"><label>Balance</label><span class="val" id="stBalanceVal">0</span></div><input type="range" id="stBalance" min="-100" max="100" value="0"></div>
+        </div>
+      </div>
+
+      <div class="acc-section" data-sec="detail">
+        <button class="acc-head"><span class="acc-label">Detail</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
+        <div class="acc-body">
+          <div class="grp-h" style="padding-top:8px;font-size:9px">Sharpening</div>
+          <div class="slider"><div class="top"><label>Amount</label><span class="val" data-k="sharpen">0</span></div><input type="range" data-k="sharpen" min="0" max="100" value="0"></div>
+          <div class="grp-h" style="font-size:9px">Noise Reduction</div>
+          <div class="slider"><div class="top"><label>Luminance</label><span class="val" data-k="denoiseL">0</span></div><input type="range" data-k="denoiseL" min="0" max="100" value="0"></div>
+          <div class="slider"><div class="top"><label>Color</label><span class="val" data-k="denoiseC">0</span></div><input type="range" data-k="denoiseC" min="0" max="100" value="0"></div>
+        </div>
+      </div>
+
+      <div class="acc-section" data-sec="lens">
+        <button class="acc-head"><span class="acc-label">Lens Corrections</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
+        <div class="acc-body">
           <div class="slider"><div class="top"><label>Distortion</label><span class="val" data-k="distort">0</span></div><input type="range" data-k="distort" min="-100" max="100" value="0"></div>
-          <div class="slider"><div class="top"><label>Lens Vignette</label><span class="val" data-k="vignette2">0</span></div><input type="range" data-k="vignette2" min="-100" max="0" value="0"></div>
-          <div class="grp-h">Perspective</div>
+          <div class="slider"><div class="top"><label>Vignette</label><span class="val" data-k="vignette2">0</span></div><input type="range" data-k="vignette2" min="-100" max="0" value="0"></div>
+        </div>
+      </div>
+
+      <div class="acc-section" data-sec="transform">
+        <button class="acc-head"><span class="acc-label">Transform</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
+        <div class="acc-body">
           <div class="slider"><div class="top"><label>Vertical</label><span class="val" data-k="vertPersp">0</span></div><input type="range" data-k="vertPersp" min="-100" max="100" value="0"></div>
           <div class="slider"><div class="top"><label>Horizontal</label><span class="val" data-k="horizPersp">0</span></div><input type="range" data-k="horizPersp" min="-100" max="100" value="0"></div>
         </div>
       </div>
 
       <div class="acc-section" data-sec="masks">
-        <button class="acc-head"><span class="acc-label">Masks</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
+        <button class="acc-head"><span class="acc-label">Masking</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
         <div class="acc-body">
           <div class="grp-h" style="padding-top:8px">Local adjustments</div>
           <div class="maskbtns">
@@ -1900,6 +1908,21 @@ if(navToggleBtn&&navPanel){
   });
 }
 
+/* ---- right panel collapse ---- */
+(function(){
+  const btn=$('#rPanelToggle');
+  const col=document.querySelector('.col.right');
+  if(!btn||!col)return;
+  let open=true;
+  btn.addEventListener('click',()=>{
+    open=!open;
+    col.classList.toggle('rp-closed',!open);
+    document.querySelector('main').classList.toggle('rp-collapsed',!open);
+    btn.textContent=open?'›':'‹';
+    setTimeout(()=>renderStage(),220);
+  });
+})();
+
 /* ---------- mask overlay drawing + interaction ---------- */
 function n2c(nx,ny){ const r=lastRegion; return [ (nx*lastRegionImgW()-r.sx)/r.sw*r.cw, (ny*lastRegionImgH()-r.sy)/r.sh*r.ch ]; }
 function lastRegionImgW(){ const p=sel(); return p?p.w:1; }
@@ -1939,10 +1962,14 @@ function drawCropOverlay(){
   [[x1,y1,1,1],[x2,y1,-1,1],[x1,y2,1,-1],[x2,y2,-1,-1]].forEach(([cx,cy,dx,dy])=>{
     octx.beginPath(); octx.moveTo(cx+dx*bl,cy); octx.lineTo(cx,cy); octx.lineTo(cx,cy+dy*bl); octx.stroke();
   });
-  // 8 resize handles
-  octx.shadowColor='rgba(0,0,0,.5)'; octx.shadowBlur=4;
+  // 8 resize handles — circles for better touch targeting
   getCropHandles(crop,cw,ch).forEach(h=>{
-    octx.fillStyle='#fff'; octx.fillRect(h.x-5,h.y-5,10,10);
+    octx.shadowColor='rgba(0,0,0,.55)'; octx.shadowBlur=5;
+    octx.beginPath(); octx.arc(h.x,h.y,8,0,Math.PI*2);
+    octx.fillStyle='#fff'; octx.fill();
+    octx.shadowBlur=0;
+    octx.strokeStyle='rgba(0,0,0,.2)'; octx.lineWidth=1;
+    octx.beginPath(); octx.arc(h.x,h.y,8,0,Math.PI*2); octx.stroke();
   });
   octx.shadowBlur=0;
 }
@@ -2523,6 +2550,53 @@ const BUILTIN_PRESETS=[
   {cat:'Portrait', name:'Portrait',  adj:lookPreset({contrast:10,clarity:14,temp:8,vibrance:14,sharpen:25})},
   {cat:'Portrait', name:'Warm Skin', adj:lookPreset({temp:12,vibrance:10,highlights:-8,clarity:8})},
   {cat:'Portrait', name:'Soft Glow', adj:lookPreset({contrast:-8,clarity:-15,highlights:-5,exposure:0.05})},
+
+  // Cinematic
+  {cat:'Cinematic', name:'Teal & Orange',  adj:lookPreset({temp:18,contrast:22,vibrance:15,splitTone:{shadowHue:195,shadowSat:35,highlightHue:28,highlightSat:40,balance:10}})},
+  {cat:'Cinematic', name:'Hollywood Gold', adj:lookPreset({temp:24,contrast:18,highlights:-12,shadows:8,vibrance:12,splitTone:{shadowHue:200,shadowSat:20,highlightHue:42,highlightSat:50,balance:20}})},
+  {cat:'Cinematic', name:'Noir',           adj:lookPreset({saturation:-85,contrast:45,blacks:-30,whites:10,clarity:30,curve:[[0,0],[64,40],[192,210],[255,255]]})},
+  {cat:'Cinematic', name:'Bleach & Cyan',  adj:lookPreset({saturation:-30,contrast:30,clarity:20,splitTone:{shadowHue:192,shadowSat:30,highlightHue:0,highlightSat:0,balance:-20}})},
+  {cat:'Cinematic', name:'Indie Matte',    adj:lookPreset({contrast:-8,vibrance:-8,curve:[[0,22],[96,88],[160,172],[255,238]],splitTone:{shadowHue:220,shadowSat:20,highlightHue:40,highlightSat:15,balance:0}})},
+  {cat:'Cinematic', name:'Twilight',       adj:lookPreset({temp:-18,contrast:28,shadows:-15,vibrance:10,splitTone:{shadowHue:240,shadowSat:30,highlightHue:30,highlightSat:20,balance:-10}})},
+  {cat:'Cinematic', name:'Summer Haze',    adj:lookPreset({temp:15,contrast:-5,highlights:-20,vibrance:18,curve:[[0,14],[128,132],[255,242]]})},
+  {cat:'Cinematic', name:'Cold City',      adj:lookPreset({temp:-22,contrast:25,clarity:15,vibrance:8,splitTone:{shadowHue:210,shadowSat:35,highlightHue:180,highlightSat:10,balance:0}})},
+
+  // Landscape
+  {cat:'Landscape', name:'Deep Forest',    adj:lookPreset({temp:-8,contrast:18,clarity:20,vibrance:28,highlights:-15,shadows:10})},
+  {cat:'Landscape', name:'Desert Sun',     adj:lookPreset({temp:30,tint:8,contrast:20,highlights:-10,whites:-8,vibrance:15,clarity:12})},
+  {cat:'Landscape', name:'Coastal Fog',    adj:lookPreset({temp:-10,contrast:-8,whites:-12,shadows:18,vibrance:10,clarity:-5})},
+  {cat:'Landscape', name:'Mountain Blue',  adj:lookPreset({temp:-15,contrast:22,clarity:18,vibrance:20,highlights:-8})},
+  {cat:'Landscape', name:'Golden Fields',  adj:lookPreset({temp:26,tint:5,exposure:0.1,highlights:-14,vibrance:22,saturation:8})},
+  {cat:'Landscape', name:'Storm Drama',    adj:lookPreset({contrast:35,blacks:-25,highlights:-20,clarity:28,vibrance:8,saturation:-10})},
+  {cat:'Landscape', name:'Autumn',         adj:lookPreset({temp:22,tint:10,contrast:16,vibrance:30,saturation:12,shadows:8})},
+  {cat:'Landscape', name:'Winter White',   adj:lookPreset({temp:-8,contrast:-5,whites:22,highlights:-18,vibrance:5,clarity:8})},
+
+  // Nature
+  {cat:'Nature', name:'Wildlife Sharp',    adj:lookPreset({contrast:20,clarity:22,sharpen:40,vibrance:12,highlights:-8})},
+  {cat:'Nature', name:'Bird Sky',          adj:lookPreset({temp:-8,contrast:18,clarity:15,vibrance:16,highlights:-12,saturation:8})},
+  {cat:'Nature', name:'Macro Soft',        adj:lookPreset({contrast:8,clarity:-5,sharpen:20,vibrance:20,highlights:-8,exposure:0.1})},
+  {cat:'Nature', name:'Green & Lush',      adj:lookPreset({temp:-5,contrast:15,vibrance:35,saturation:15,clarity:12})},
+  {cat:'Nature', name:'Night Sky',         adj:lookPreset({exposure:-0.1,contrast:30,blacks:-35,highlights:-20,clarity:20,denoiseL:40,denoiseC:30})},
+  {cat:'Nature', name:'Sunrise Glow',      adj:lookPreset({temp:32,tint:8,exposure:0.08,highlights:-18,shadows:12,vibrance:20})},
+
+  // Film Simulations
+  {cat:'Film', name:'Kodak Gold',         adj:lookPreset({temp:20,tint:6,contrast:8,vibrance:15,saturation:5,curve:[[0,12],[96,105],[192,195],[255,240]]})},
+  {cat:'Film', name:'Fuji Velvia',        adj:lookPreset({contrast:30,vibrance:40,saturation:20,clarity:10,curve:[[0,5],[96,88],[192,205],[255,250]]})},
+  {cat:'Film', name:'Agfa Portrait',      adj:lookPreset({temp:14,contrast:-5,vibrance:12,saturation:-5,highlights:-8,curve:[[0,18],[128,130],[255,232]]})},
+  {cat:'Film', name:'Ilford HP5',         adj:lookPreset({saturation:-100,contrast:22,clarity:18,curve:[[0,10],[64,55],[192,200],[255,248]]})},
+  {cat:'Film', name:'Kodachrome',         adj:lookPreset({temp:12,contrast:25,vibrance:20,saturation:15,whites:8,curve:[[0,8],[96,90],[160,176],[255,248]]})},
+
+  // Portrait extended
+  {cat:'Portrait', name:'Clean Editorial', adj:lookPreset({contrast:12,clarity:8,sharpen:20,vibrance:8,temp:5})},
+  {cat:'Portrait', name:'Moody Dark',      adj:lookPreset({exposure:-0.15,contrast:22,shadows:-20,highlights:-12,vibrance:-5,clarity:10})},
+  {cat:'Portrait', name:'Ethereal',        adj:lookPreset({exposure:0.12,contrast:-10,clarity:-20,highlights:-5,vibrance:8,saturation:-5})},
+  {cat:'Portrait', name:'Studio Pop',      adj:lookPreset({contrast:18,vibrance:22,clarity:15,sharpen:15,saturation:8})},
+
+  // Mono extended
+  {cat:'Mono', name:'Silver Gelatin',     adj:lookPreset({saturation:-100,contrast:28,clarity:22,curve:[[0,8],[64,58],[192,205],[255,252]]})},
+  {cat:'Mono', name:'Faded Silver',       adj:lookPreset({saturation:-100,contrast:-5,whites:-8,blacks:10,curve:[[0,28],[128,124],[255,228]]})},
+  {cat:'Mono', name:'Infrared',           adj:lookPreset({saturation:-100,contrast:40,clarity:30,whites:20,blacks:-30,curve:[[0,0],[64,100],[192,220],[255,255]]})},
+  {cat:'Mono', name:'Selenium',           adj:lookPreset({saturation:-100,contrast:24,temp:8,clarity:16,curve:[[0,6],[96,90],[192,198],[255,248]]})},
 ];
 
 function lookSource(p){
@@ -2843,7 +2917,7 @@ overlay.addEventListener('pointerdown',e=>{
 });
 let dragRef=null;
 overlay.addEventListener('pointermove',e=>{
-  if(state.cropMode){ handleCropMove(e); return; }
+  if(state.cropMode){ updateCropCursor(e); handleCropMove(e); return; }
   if(state.spotMode){ handleSpotMove(e); return; }
   const p=sel(); if(!p||state.activeMask<0)return;
   const m=p.masks[state.activeMask];
@@ -2901,7 +2975,7 @@ function enterCropMode(){
   closeMaskEditor();
   pushHistory();
   state.cropSnap = snapshot(p);
-  if(!p.adj.crop) p.adj.crop = {l:0, t:0, r:1, b:1};
+  if(!p.adj.crop) p.adj.crop = {l:0.04, t:0.04, r:0.96, b:0.96};
   state.cropMode = true;
   $('#cropBtn').classList.add('active');
   $('#cropstrip').classList.remove('hide');
@@ -2950,7 +3024,7 @@ function handleCropDown(e){
   const crop=p.adj.crop||{l:0,t:0,r:1,b:1};
   // hit-test 8 handles
   for(const h of getCropHandles(crop,cw,ch)){
-    if(Math.hypot(e.offsetX-h.x, e.offsetY-h.y)<12){
+    if(Math.hypot(e.offsetX-h.x, e.offsetY-h.y)<22){
       cropHandleDrag={type:h.id, startX:e.offsetX, startY:e.offsetY, snap:{...crop}, cw, ch};
       overlay.setPointerCapture(e.pointerId); return;
     }
@@ -2964,6 +3038,18 @@ function handleCropDown(e){
   // click outside → draw new crop rect
   cropHandleDrag={type:'new', startX:e.offsetX, startY:e.offsetY, cw, ch};
   overlay.setPointerCapture(e.pointerId);
+}
+const CROP_CURSORS={tl:'nw-resize',t:'n-resize',tr:'ne-resize',ml:'w-resize',mr:'e-resize',bl:'sw-resize',b:'s-resize',br:'se-resize'};
+function updateCropCursor(e){
+  if(!state.cropMode||!state._cropView)return;
+  const {cw,ch}=state._cropView;
+  const p=sel(); if(!p)return;
+  const crop=p.adj.crop||{l:0,t:0,r:1,b:1};
+  for(const h of getCropHandles(crop,cw,ch)){
+    if(Math.hypot(e.offsetX-h.x,e.offsetY-h.y)<22){overlay.style.cursor=CROP_CURSORS[h.id]||'crosshair';return;}
+  }
+  const x1=crop.l*cw,y1=crop.t*ch,x2=crop.r*cw,y2=crop.b*ch;
+  overlay.style.cursor=(e.offsetX>x1&&e.offsetX<x2&&e.offsetY>y1&&e.offsetY<y2)?'move':'crosshair';
 }
 function handleCropMove(e){
   if(!cropHandleDrag) return;
@@ -2997,8 +3083,8 @@ function handleCropMove(e){
     }
   }
   p.adj.crop=c;
-  // only redraw overlay (no pixel reprocess while dragging handles)
   octx.clearRect(0,0,overlay.width,overlay.height); drawCropOverlay();
+  scheduleRender(80);
 }
 function handleCropUp(){
   if(cropHandleDrag){ cropHandleDrag=null; }
