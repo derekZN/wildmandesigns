@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#15171C">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WildmanDesigns">
+<link rel="apple-touch-icon" href="icon-192.png">
 <link rel="manifest" href="manifest.json">
 <title>WildmanDesigns — develop</title>
 <style>
@@ -303,7 +308,7 @@
   .thumbs::-webkit-scrollbar{display:none}
   .thumb{width:80px;height:54px}
   .thumb canvas{width:80px!important;height:54px!important}
-  .col.right{position:absolute;bottom:0;left:0;right:0;height:42vh;z-index:6;display:none;flex-direction:column;background:var(--panel);border-top-left-radius:18px;border-top-right-radius:18px;border-top:1px solid var(--line);box-shadow:0 -10px 40px rgba(0,0,0,.55)}
+  .col.right{position:absolute;bottom:0;left:0;right:0;height:42vh;z-index:6;display:none;flex-direction:column;background:var(--panel);border-top-left-radius:18px;border-top-right-radius:18px;border-top:1px solid var(--line);box-shadow:0 -10px 40px rgba(0,0,0,.55);transition:height .25s ease}
   .col.right.mob-show{display:flex}
   .sheet-handle{display:block;width:36px;height:4px;background:var(--line);border-radius:2px;margin:8px auto 2px;flex-shrink:0}
   .stage.sheet-open{padding-bottom:42vh}
@@ -339,7 +344,7 @@
   .subtab{padding:5px 10px;font-size:11px}
   .toolstrip{overflow-x:auto;gap:0;padding:3px 6px;height:auto;min-height:36px}
   .toolstrip::-webkit-scrollbar{display:none}
-  .tool-btn{width:40px;height:32px}
+  .tool-btn{width:40px;height:44px}
   .tool-sep{margin:0 1px}
   .tool-nav{display:none}
   .mob-tabs{display:flex;flex:0 0 auto;height:calc(58px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--panel);border-top:1px solid var(--line);z-index:10}
@@ -378,7 +383,9 @@
     WildmanDesigns <small>develop</small>
   </div>
   <div class="spacer"></div>
+  <span id="offlineDot" class="hide" title="Offline — edits save locally" style="width:8px;height:8px;border-radius:50%;background:var(--reject);box-shadow:0 0 6px var(--reject);flex-shrink:0"></span>
   <span class="count" id="count">no photos</span>
+  <button class="btn hide" id="installBtn" title="Install app"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Install</button>
   <button class="btn" id="settingsBtn" title="Settings">
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.97 7.97 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a8 8 0 0 0-1.7-1L14.9 3h-4l-.4 2.9a8 8 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.97 7.97 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a8 8 0 0 0 1.7 1l.4 2.9h4l.4-2.9a8 8 0 0 0 1.7-1l2.5 1 2-3.5L19.4 13z"/></svg>
   </button>
@@ -2359,9 +2366,18 @@ async function exportList(list){
       const b64=btoa(String.fromCharCode(...new Uint8Array(ab)));
       rendered.push({name:outName, data:b64});
     } else {
-      const a=document.createElement('a');
-      a.href=URL.createObjectURL(blob); a.download=outName; a.click();
-      await wait(300);
+      let _shared=false;
+      if(window.innerWidth<=768&&navigator.canShare){
+        const f=new File([blob],outName,{type:blob.type});
+        if(navigator.canShare({files:[f]})){
+          try{await navigator.share({files:[f],title:outName});_shared=true;}catch(e){}
+        }
+      }
+      if(!_shared){
+        const a=document.createElement('a');
+        a.href=URL.createObjectURL(blob); a.download=outName; a.click();
+        await wait(300);
+      }
     }
     await wait(0);
   }
@@ -2413,6 +2429,7 @@ function renderThumbs(){
       lpTimer=setTimeout(()=>{
         if(!state.selectMode){
           lastLongPressAt=Date.now();
+          haptic([20,50,20]);
           state.selectMode=true; state.multiSel.add(p.id);
           updateSelectUI(); renderThumbs();
         }
@@ -2468,7 +2485,7 @@ $('#deleteBtn').onclick=()=>{
 function move(dir){
   const photos=state.photos; if(!photos.length)return;
   let i=photos.findIndex(p=>p.id===state.selId);
-  i=clamp(i+dir,0,photos.length-1); state.selId=photos[i].id; onPhotoChanged();
+  i=clamp(i+dir,0,photos.length-1); state.selId=photos[i].id; haptic(6); onPhotoChanged();
   renderThumbs(); renderStage(); syncSliders(); drawCurve(); renderLooks(); updateChrome();
 }
 $('#prev').onclick=()=>move(-1); $('#next').onclick=()=>move(1);
@@ -3235,6 +3252,7 @@ renderPresets(); drawCurve(); renderLooks(); updateChrome(); updateZoomBtn(); up
 const MOB_TABS = ['tabView','tabFilm','tabEdit','tabLooks','tabMasks'];
 function mobTab(tab){
   if(window.innerWidth > 768) return;
+  if(tab!=='view') haptic(5);
   const filmbar=$('#filmbar');
   const right=document.querySelector('.col.right');
   if(filmbar) filmbar.classList.remove('mob-show');
@@ -3509,7 +3527,7 @@ if(IS_ELECTRON){
    RATINGS & FLAGS
    ============================================================ */
 function setFlag(v){const p=sel();if(!p)return;p.flag=v;renderThumbs();scheduleSessionSave();toast(v===1?'Picked':v===-1?'Rejected':'Unflagged');}
-function setRating(v){const p=sel();if(!p)return;p.rating=v;renderThumbs();scheduleSessionSave();toast('Rating: '+v+(v?'★':''));}
+function setRating(v){const p=sel();if(!p)return;p.rating=v;haptic(v?[10,30,10]:8);renderThumbs();scheduleSessionSave();toast('Rating: '+v+(v?'★':''));}
 function toggleFullscreen(){
   if(!document.fullscreenElement) document.documentElement.requestFullscreen().catch(()=>{});
   else document.exitFullscreen();
@@ -3825,6 +3843,103 @@ stage.addEventListener('touchmove',e=>{
     else if(d/pinchStartDist<0.7){toggleZoom();pinchStartDist=d;}
   }
 },{passive:true});
+
+/* ============================================================
+   PWA POLISH — haptics · wake lock · install prompt · offline · draggable sheet
+   ============================================================ */
+
+// Haptic helper — called from multiple places above
+function haptic(pat=8){ if(navigator.vibrate) navigator.vibrate(pat); }
+
+// Screen Wake Lock — keep screen on while editing
+let _wakeLock=null;
+async function _requestWakeLock(){
+  if(!('wakeLock' in navigator)||document.visibilityState!=='visible') return;
+  try{ _wakeLock=await navigator.wakeLock.request('screen'); _wakeLock.addEventListener('release',()=>{_wakeLock=null;}); }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&!_wakeLock&&state.photos.length) _requestWakeLock();
+});
+
+// Install prompt — shows "Install" button when browser fires beforeinstallprompt
+let _deferredPrompt=null;
+const _installBtn=$('#installBtn');
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault(); _deferredPrompt=e;
+  if(_installBtn) _installBtn.classList.remove('hide');
+});
+if(_installBtn) _installBtn.addEventListener('click',async()=>{
+  if(!_deferredPrompt) return;
+  _deferredPrompt.prompt();
+  const {outcome}=await _deferredPrompt.userChoice;
+  _deferredPrompt=null;
+  _installBtn.classList.add('hide');
+});
+window.addEventListener('appinstalled',()=>{
+  if(_installBtn) _installBtn.classList.add('hide');
+  _deferredPrompt=null;
+  toast('Installed! Open from your home screen.');
+});
+
+// Offline indicator
+const _offlineDot=$('#offlineDot');
+function _updateOnlineStatus(){
+  if(_offlineDot) _offlineDot.classList.toggle('hide',navigator.onLine);
+}
+window.addEventListener('online',_updateOnlineStatus);
+window.addEventListener('offline',()=>{ _updateOnlineStatus(); toast('Working offline — all edits save locally'); });
+_updateOnlineStatus();
+
+// Draggable bottom sheet — drag the handle to resize, snap to positions
+(function(){
+  const handle=document.querySelector('.sheet-handle');
+  const sheet=document.querySelector('.col.right');
+  const stageEl=$('#stage');
+  if(!handle||!sheet) return;
+  let drag=null;
+  handle.addEventListener('pointerdown',e=>{
+    if(window.innerWidth>768) return;
+    drag={y:e.clientY, h:sheet.getBoundingClientRect().height};
+    handle.setPointerCapture(e.pointerId);
+    sheet.style.transition='none';
+    e.preventDefault();
+  },{passive:false});
+  handle.addEventListener('pointermove',e=>{
+    if(!drag) return;
+    const dy=drag.y-e.clientY;
+    const newH=Math.max(80,Math.min(window.innerHeight*0.92,drag.h+dy));
+    sheet.style.height=newH+'px';
+    if(stageEl) stageEl.style.paddingBottom=newH+'px';
+  });
+  function snapSheet(){
+    if(!drag) return;
+    sheet.style.transition='';
+    const h=sheet.getBoundingClientRect().height;
+    const vh=window.innerHeight;
+    if(h<vh*0.18){ mobTab('view'); sheet.style.height=''; if(stageEl) stageEl.style.paddingBottom=''; }
+    else if(h>vh*0.65){ sheet.style.height='88vh'; if(stageEl) stageEl.style.paddingBottom='88vh'; }
+    else { sheet.style.height='42vh'; if(stageEl) stageEl.style.paddingBottom='42vh'; }
+    drag=null;
+  }
+  handle.addEventListener('pointerup',snapSheet);
+  handle.addEventListener('pointercancel',()=>{ drag=null; sheet.style.transition=''; });
+})();
+
+// Request wake lock when photos are first loaded
+const _origAddFiles=addFiles;
+// Wire wake lock after first import (addFiles is already defined above)
+document.addEventListener('DOMContentLoaded',()=>{}, {once:true});
+// Actually just request it once on any photo selection
+const _origOnPhotoChanged=onPhotoChanged;
+// Simpler: request wake lock when editing starts (first render with a photo)
+(function(){
+  let wlRequested=false;
+  const origRender=renderStage;
+  window._wlHook=function(){
+    if(!wlRequested&&sel()){ wlRequested=true; _requestWakeLock(); }
+    origRender.apply(this,arguments);
+  };
+})();
 
 </script>
 </body>
