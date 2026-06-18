@@ -296,64 +296,157 @@
   /* ---- mobile bottom nav ---- */
   .mob-tabs{display:none}
 
+  /* ---- sidebar ---- */
+.sidebar{position:fixed;top:0;left:0;bottom:0;width:280px;background:#1a1d24;z-index:200;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow-y:auto}
+.sidebar.open{transform:translateX(0)}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,0);z-index:199;pointer-events:none;transition:background .28s}
+.sidebar-overlay.open{background:rgba(0,0,0,.55);pointer-events:auto}
+.sidebar-user{padding:48px 20px 20px;border-bottom:1px solid var(--line)}
+.sidebar-avatar{width:52px;height:52px;border-radius:50%;background:var(--amber);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#241a08;margin-bottom:12px}
+.sidebar-name{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.sidebar-email{font-size:12px;color:var(--muted)}
+.sidebar-menu{flex:1;padding:8px 0}
+.sidebar-item{display:flex;align-items:center;gap:14px;padding:14px 20px;color:var(--ink);font-size:15px;font-weight:400;cursor:pointer;border:0;background:transparent;width:100%;text-align:left;-webkit-tap-highlight-color:transparent}
+.sidebar-item:hover,.sidebar-item:active{background:rgba(255,255,255,.05)}
+.sidebar-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;color:var(--muted)}
+.sidebar-divider{height:1px;background:var(--line);margin:8px 0}
+.sidebar-social{display:flex;gap:24px;padding:20px;justify-content:center}
+/* ---- library view ---- */
+.lib-view{display:none;flex-direction:column;flex:1;overflow:hidden;background:var(--bg)}
+.lib-view.active{display:flex}
+.lib-header{flex:0 0 auto;height:56px;display:flex;align-items:center;gap:4px;padding:0 8px;background:var(--bg)}
+.lib-title{flex:1;font-size:17px;font-weight:700;color:var(--ink);padding:0 8px}
+.lib-btn{border:0;background:transparent;color:var(--ink);width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.lib-btn:active{background:rgba(255,255,255,.08)}
+.lib-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.lib-grid{flex:1;overflow-y:auto;padding:0 0 16px}
+.lib-grid::-webkit-scrollbar{display:none}
+.year-group{margin-bottom:4px}
+.year-header{display:flex;align-items:center;justify-content:space-between;padding:16px 14px 8px;font-size:16px;font-weight:700;color:var(--ink)}
+.year-header-right{display:flex;align-items:center;gap:6px;font-size:14px;font-weight:400;color:var(--muted)}
+.year-photos{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}
+.lib-photo{position:relative;aspect-ratio:1;background:var(--thumb-bg);overflow:hidden;cursor:pointer}
+.lib-photo.wide{grid-column:span 2;aspect-ratio:2/1}
+.lib-photo canvas,.lib-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.lib-photo .lp-sel{position:absolute;inset:0;border:3px solid var(--sel);pointer-events:none;display:none}
+.lib-photo.selected .lp-sel{display:block}
+.lib-photo .lp-badge{position:absolute;top:6px;right:6px;width:22px;height:22px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
+.lib-photo.selected .lp-badge::after{content:'✓';color:#fff;font-size:12px;font-weight:700}
+.lib-fab{position:fixed;bottom:calc(68px + env(safe-area-inset-bottom));right:16px;z-index:20}
+.lib-fab-btn{width:52px;height:52px;border-radius:50%;border:0;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,.5);-webkit-tap-highlight-color:transparent;background:var(--amber);color:#241a08}
+.lib-fab-btn svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.lib-bottom-nav{flex:0 0 auto;height:calc(56px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--bg);border-top:1px solid rgba(255,255,255,.07);display:none;z-index:10}
+.lib-bottom-nav.active{display:flex}
+.lib-nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:transparent;color:rgba(255,255,255,.4);font-size:10px;font-weight:600;cursor:pointer;letter-spacing:.04em;-webkit-tap-highlight-color:transparent}
+.lib-nav-tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.lib-nav-tab.on{color:#fff}
+/* ---- mobile edit view ---- */
+.mob-edit-view{display:none;flex-direction:column;position:fixed;inset:0;z-index:100;background:#000}
+.mob-edit-view.active{display:flex}
+.mob-edit-header{flex:0 0 auto;height:52px;display:flex;align-items:center;padding:0 4px;gap:0;background:#000;padding-top:env(safe-area-inset-top);flex-shrink:0}
+.mob-edit-hbtn{border:0;background:transparent;color:#fff;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:50%;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mob-edit-hbtn:active{background:rgba(255,255,255,.1)}
+.mob-edit-hbtn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mob-edit-image{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden}
+.mob-edit-image canvas{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.mob-edit-tools{flex:0 0 auto;background:#1a1d24;padding-bottom:env(safe-area-inset-bottom)}
+.mob-tool-panel{display:none;max-height:50vh;overflow-y:auto;border-top:1px solid rgba(255,255,255,.08)}
+.mob-tool-panel.active{display:block}
+.mob-tool-panel::-webkit-scrollbar{display:none}
+.mob-tool-bar{display:flex;height:68px;align-items:center;padding:0 2px;background:#1a1d24;border-top:1px solid rgba(255,255,255,.06)}
+.mob-tool-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;border:0;background:transparent;color:rgba(255,255,255,.45);font-size:9px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;height:100%;-webkit-tap-highlight-color:transparent;transition:color .15s;padding:0 2px}
+.mob-tool-tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.mob-tool-tab.on{color:#fff}
+/* ---- actions panel ---- */
+.actions-panel{padding:14px 12px 10px}
+.actions-row{display:flex;align-items:center;gap:4px}
+.actions-divider{width:1px;height:44px;background:rgba(255,255,255,.15);flex-shrink:0;margin:0 4px}
+.action-btn{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;color:rgba(255,255,255,.85);font-size:10px;font-weight:500;cursor:pointer;padding:8px 10px;border-radius:10px;-webkit-tap-highlight-color:transparent;white-space:nowrap}
+.action-btn:active{background:rgba(255,255,255,.1)}
+.action-btn svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+/* ---- presets panel ---- */
+.presets-panel-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.1)}
+.preset-tab{flex:1;text-align:center;padding:14px 0 12px;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);border:0;background:transparent;cursor:pointer;position:relative}
+.preset-tab.on{color:#fff}
+.preset-tab.on::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:#fff;border-radius:1px}
+.preset-list-panel{display:none}
+.preset-list-panel.active{display:block}
+.preset-list-item{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid rgba(255,255,255,.05)}
+.preset-list-item:active{background:rgba(255,255,255,.05)}
+.preset-list-thumb{width:52px;height:52px;border-radius:6px;overflow:hidden;background:var(--thumb-bg);flex-shrink:0}
+.preset-list-thumb canvas{width:52px;height:52px;object-fit:cover;display:block}
+.preset-list-name{flex:1;font-size:14px;font-weight:500;color:#fff}
+.preset-list-count{font-size:13px;color:rgba(255,255,255,.5);margin-right:4px}
+.preset-list-arrow{color:rgba(255,255,255,.35);font-size:18px;line-height:1}
+/* ---- crop panel ---- */
+.mob-crop-action-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.mob-crop-title{font-size:14px;font-weight:600;color:#fff}
+.mob-crop-btns{display:flex;gap:8px}
+.mob-crop-btn{border:0;background:rgba(255,255,255,.12);color:#fff;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:17px}
+.crop-arc-wrap{padding:10px 16px 6px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.crop-arc-ruler{height:32px;width:100%;position:relative;overflow:hidden;cursor:ew-resize}
+.crop-arc-ruler::before{content:'';position:absolute;inset:0;background:linear-gradient(to right,#1a1d24 0%,transparent 18%,transparent 82%,#1a1d24 100%);z-index:1;pointer-events:none}
+.crop-arc-inner{display:flex;align-items:center;touch-action:pan-y;user-select:none;padding:0 50%;width:max-content;height:100%}
+.crop-arc-tick{width:1px;height:10px;background:rgba(255,255,255,.22);flex-shrink:0;margin:0 5px;align-self:center}
+.crop-arc-tick.major{height:18px;background:rgba(255,255,255,.45)}
+.crop-arc-tick.center-tick{background:var(--amber);height:22px;width:2px}
+.crop-arc-deg{font-size:11px;color:rgba(255,255,255,.6);font-variant-numeric:tabular-nums;font-family:var(--mono)}
+.crop-controls{display:flex;align-items:center;padding:4px 12px}
+.crop-ctrl-btn{border:0;background:transparent;color:rgba(255,255,255,.7);width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%;-webkit-tap-highlight-color:transparent}
+.crop-ctrl-btn:active{background:rgba(255,255,255,.1)}
+.crop-ctrl-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.crop-cats{display:flex;border-bottom:1px solid rgba(255,255,255,.08)}
+.crop-cat{flex:1;text-align:center;padding:10px 0 8px;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);border:0;background:transparent;cursor:pointer;position:relative}
+.crop-cat.on{color:#fff}
+.crop-cat.on::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:#fff;border-radius:1px}
+.crop-aspects{display:flex;gap:4px;padding:10px 12px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.crop-aspects::-webkit-scrollbar{display:none}
+.crop-aspect-btn{display:flex;flex-direction:column;align-items:center;gap:5px;border:0;background:transparent;color:rgba(255,255,255,.55);font-size:10px;font-weight:500;cursor:pointer;flex-shrink:0;padding:4px 8px;border-radius:8px;-webkit-tap-highlight-color:transparent}
+.crop-aspect-btn.on{color:#fff;background:rgba(255,255,255,.1)}
+.crop-aspect-icon{width:28px;height:28px;border:2px solid currentColor;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700}
+.crop-done-bar{display:flex;align-items:center;justify-content:space-between;padding:8px 16px;border-top:1px solid rgba(255,255,255,.08)}
+.crop-done-cancel,.crop-done-ok{border:0;background:transparent;color:rgba(255,255,255,.8);font-size:24px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.crop-done-ok{color:var(--amber)}
+.crop-done-label{font-size:13px;font-weight:600;color:rgba(255,255,255,.7)}
+/* ---- edit category tabs ---- */
+.mob-edit-cats{display:flex;overflow-x:auto;-webkit-overflow-scrolling:touch;border-bottom:1px solid rgba(255,255,255,.08)}
+.mob-edit-cats::-webkit-scrollbar{display:none}
+.mob-edit-cat{flex-shrink:0;padding:12px 16px 10px;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);border:0;background:transparent;cursor:pointer;position:relative;white-space:nowrap}
+.mob-edit-cat.on{color:#fff}
+.mob-edit-cat.on::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:#fff;border-radius:1px}
+.mob-edit-sliders{padding:4px 0 8px}
+.mob-edit-slider{padding:6px 16px}
+.mob-edit-slider .top{display:flex;justify-content:space-between;margin-bottom:2px}
+.mob-edit-slider label{font-size:13px;color:rgba(255,255,255,.85)}
+.mob-edit-slider .val{font-size:12px;color:rgba(255,255,255,.5);font-family:var(--mono);font-variant-numeric:tabular-nums}
+/* ---- masking panel ---- */
+.masking-panel-tabs{display:flex;border-bottom:1px solid rgba(255,255,255,.08)}
+.mask-tab{flex:1;text-align:center;padding:14px 0 12px;font-size:13px;font-weight:600;color:rgba(255,255,255,.5);border:0;background:transparent;cursor:pointer;position:relative}
+.mask-tab.on{color:#fff}
+.mask-tab.on::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:#fff;border-radius:1px}
+.adaptive-list-item{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent;border-bottom:1px solid rgba(255,255,255,.05)}
+.adaptive-list-item:active{background:rgba(255,255,255,.06)}
+.adaptive-thumb{width:52px;height:52px;border-radius:6px;background:var(--panel-2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:24px}
+.adaptive-name{flex:1;font-size:14px;font-weight:500;color:#fff}
+.adaptive-arrow{color:rgba(255,255,255,.35);font-size:20px;line-height:1}
+.mask-add-row{display:flex;gap:8px;padding:12px 16px}
+.mask-add-btn{flex:1;padding:12px;border:1px solid rgba(255,255,255,.15);background:transparent;color:#fff;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
+.mask-add-btn:active{background:rgba(255,255,255,.08)}
+/* ---- remove panel ---- */
+.remove-panel{padding:14px 16px 8px}
+.remove-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.remove-label{font-size:13px;color:rgba(255,255,255,.85);min-width:42px}
+
   @media(max-width:768px){
-  #importFolderBtn,.count{display:none}
-  .brand small{display:none}
-  header{gap:8px;padding:0 10px;height:44px}
-  main{grid-template-columns:1fr;position:relative}
-  .nav-panel{display:none}
-  /* filmbar fixed above bottom nav, hidden by default */
-  .filmbar{display:none;position:fixed;bottom:calc(58px + env(safe-area-inset-bottom));left:0;right:0;z-index:6;box-shadow:0 -4px 20px rgba(0,0,0,.4);height:118px}
-  .filmbar.mob-show{display:flex}
-  .thumbs{padding:6px 8px;gap:5px}
-  .thumbs::-webkit-scrollbar{display:none}
-  .thumb{width:80px;height:54px}
-  .thumb canvas{width:80px!important;height:54px!important}
-  .col.right{position:absolute;bottom:0;left:0;right:0;height:42vh;z-index:6;display:none;flex-direction:column;background:var(--panel);border-top-left-radius:18px;border-top-right-radius:18px;border-top:1px solid var(--line);box-shadow:0 -10px 40px rgba(0,0,0,.55);transition:height .25s ease}
-  .col.right.mob-show{display:flex}
-  .sheet-handle{display:block;width:36px;height:4px;background:var(--line);border-radius:2px;margin:8px auto 2px;flex-shrink:0}
-  .stage.sheet-open{padding-bottom:42vh}
-  .stage.filmbar-open{padding-bottom:128px}
-  .histwrap{padding:8px 14px 4px}
-  #hist{height:48px}
-  .panel-actions{padding:8px 14px}
-  .syncrow{padding:6px 14px}
-  .grp-h{padding:8px 14px 4px}
-  .btn{padding:10px 14px;min-height:40px}
-  .ghost{padding:9px 11px;min-height:40px}
-  .slider{padding:8px 14px}
-  input[type=range]{height:5px}
-  input[type=range]::-webkit-slider-thumb{width:22px;height:22px}
-  input[type=range]::-moz-range-thumb{width:22px;height:22px}
-  .spotstrip{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;height:auto;min-height:38px;padding:6px 12px}
-  .spotstrip::-webkit-scrollbar{display:none}
-  .spotstrip label,.spotstrip .ssval{flex-shrink:0}
-  .spotstrip input[type=range]{width:80px;flex-shrink:0}
-  .spotstrip .ghost{flex-shrink:0;padding:5px 9px;min-height:0;font-size:10.5px}
-  #filmtools{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
-  #filmtools::-webkit-scrollbar{display:none}
-  .filmtools .ghost{padding:4px 9px;font-size:10.5px;min-height:0;flex-shrink:0}
-  #sortSel{flex-shrink:0}
-  #collectionsPanel{position:absolute;top:34px;left:0;right:0;z-index:7;background:var(--panel);border-bottom:1px solid var(--line);box-shadow:0 6px 20px rgba(0,0,0,.4);max-height:180px;overflow-y:auto}
-  .cropstrip{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;height:auto;min-height:44px;padding:6px 12px}
-  .cropstrip::-webkit-scrollbar{display:none}
-  .cropstrip label,.cropstrip .csval{flex-shrink:0}
-  .cropstrip input[type=range]{width:80px;flex-shrink:0}
-  .cropstrip .ghost{flex-shrink:0;padding:5px 9px;min-height:0;font-size:10.5px}
-  .cropstrip .btn{flex-shrink:0;padding:5px 9px;min-height:0;font-size:10.5px}
-  .subtabs{gap:4px;padding:8px 10px}
-  .subtab{padding:5px 10px;font-size:11px}
-  .toolstrip{overflow-x:auto;gap:0;padding:3px 6px;height:auto;min-height:36px}
-  .toolstrip::-webkit-scrollbar{display:none}
-  .tool-btn{width:40px;height:44px}
-  .tool-sep{margin:0 1px}
-  .tool-nav{display:none}
-  .mob-tabs{display:flex;flex:0 0 auto;height:calc(58px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--panel);border-top:1px solid var(--line);z-index:10}
-  .mob-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;border:0;background:transparent;color:var(--muted);font-size:9px;font-weight:600;font-family:var(--sans);cursor:pointer;padding:0 2px;letter-spacing:.04em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;transition:color .15s}
-  .mob-tab svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  .mob-tab.on{color:var(--amber);box-shadow:inset 0 3px 0 0 var(--amber)}
-  .toast{bottom:calc(70px + env(safe-area-inset-bottom))}
-  .rpanel-toggle{display:none}
+  /* hide all desktop UI elements */
+  header{display:none!important}
+  main{display:none!important}
+  .filmbar{display:none!important}
+  .mob-tabs{display:none!important}
+  .update-banner{z-index:300}
+  .toast{bottom:calc(80px + env(safe-area-inset-bottom));z-index:150}
+  /* modals stay on top */
+  .modal-backdrop{z-index:250}
   }
   .thumb-rating{position:absolute;bottom:20px;left:4px;font-size:9px;color:var(--amber);text-shadow:0 1px 3px rgba(0,0,0,.9);letter-spacing:1px}
   .thumb-flag-pick{position:absolute;top:4px;left:4px;width:8px;height:8px;border-radius:50%;background:var(--pick)}
@@ -363,6 +456,47 @@
 </style>
 </head>
 <body>
+<!-- SIDEBAR (mobile) -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-user">
+    <div class="sidebar-avatar">W</div>
+    <div class="sidebar-name">WildmanDesigns</div>
+    <div class="sidebar-email">Local · no account needed</div>
+  </div>
+  <div class="sidebar-menu">
+    <button class="sidebar-item" id="sidebarImport"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Import Photos</button>
+    <button class="sidebar-item" id="sidebarExport"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Export Photos</button>
+    <div class="sidebar-divider"></div>
+    <button class="sidebar-item" id="sidebarSettings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.97 7.97 0 0 0 0-2l2.1-1.6-2-3.5-2.5 1a8 8 0 0 0-1.7-1L14.9 3h-4l-.4 2.9a8 8 0 0 0-1.7 1l-2.5-1-2 3.5L6.4 11a7.97 7.97 0 0 0 0 2l-2.1 1.6 2 3.5 2.5-1a8 8 0 0 0 1.7 1l.4 2.9h4l.4-2.9a8 8 0 0 0 1.7-1l2.5 1 2-3.5L19.4 13z"/></svg>Preferences</button>
+    <button class="sidebar-item" id="sidebarClear"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Clear All Photos</button>
+  </div>
+  <div class="sidebar-social"><span style="font-size:11px;color:var(--muted)">WildmanDesigns · v18</span></div>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- LIBRARY VIEW (mobile full-screen grid) -->
+<div class="lib-view active" id="libView">
+  <div class="lib-header">
+    <button class="lib-btn" id="libHamburger"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+    <div class="lib-title">All photos</div>
+    <button class="lib-btn" id="libFilter"><svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg></button>
+    <button class="lib-btn" id="libMore"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/></svg></button>
+  </div>
+  <div class="lib-grid" id="libGrid">
+    <div id="libEmpty" style="padding:80px 24px;text-align:center;color:var(--muted)">
+      <div style="font-size:52px;margin-bottom:20px">📷</div>
+      <div style="font-size:20px;font-weight:700;color:var(--ink);margin-bottom:10px">No photos yet</div>
+      <div style="font-size:14px;line-height:1.7">Tap + to import photos from your device.</div>
+    </div>
+  </div>
+  <div class="lib-fab"><button class="lib-fab-btn" id="libFabImport"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button></div>
+</div>
+<nav class="lib-bottom-nav active" id="libBottomNav">
+  <button class="lib-nav-tab" id="libNavGallery"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" stroke="none"/><polyline points="21 15 16 10 5 21"/></svg>Gallery</button>
+  <button class="lib-nav-tab on" id="libNavMain"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Lightroom</button>
+  <button class="lib-nav-tab" id="libNavCommunity"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Community</button>
+</nav>
+
 <header>
   <div class="brand">
     <svg class="brandmark" viewBox="0 0 30 23" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -781,6 +915,124 @@
     Masks
   </button>
 </nav>
+
+<!-- MOBILE EDIT VIEW -->
+<div class="mob-edit-view" id="mobEditView">
+  <div class="mob-edit-header">
+    <button class="mob-edit-hbtn" id="mobEditBack"><svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg></button>
+    <div style="flex:1"></div>
+    <button class="mob-edit-hbtn" id="mobEditUndo"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.47"/></svg></button>
+    <button class="mob-edit-hbtn" id="mobEditSave"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></button>
+    <button class="mob-edit-hbtn" id="mobEditShare"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
+    <button class="mob-edit-hbtn" id="mobEditMore"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5" fill="white" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="white" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="white" stroke="none"/></svg></button>
+  </div>
+  <div class="mob-edit-image" id="mobEditImage"></div>
+  <div class="mob-edit-tools">
+    <div class="mob-tool-panel" id="panelActions">
+      <div class="actions-panel"><div class="actions-row">
+        <button class="action-btn" id="actAuto"><svg viewBox="0 0 24 24"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/></svg>Auto</button>
+        <button class="action-btn" id="actEnhance"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>Enhance</button>
+        <div class="actions-divider"></div>
+        <button class="action-btn" id="actSubject"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Subject</button>
+        <button class="action-btn" id="actBackground"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Background</button>
+        <button class="action-btn" id="actFixAngle"><svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.47"/></svg>Fix angle</button>
+      </div></div>
+    </div>
+    <div class="mob-tool-panel" id="panelPresets">
+      <div class="presets-panel-tabs">
+        <button class="preset-tab on" data-ptab="recommended">Recommended</button>
+        <button class="preset-tab" data-ptab="all">All</button>
+        <button class="preset-tab" data-ptab="yours">Yours</button>
+      </div>
+      <div class="preset-list-panel active" id="presetsRecommended"></div>
+      <div class="preset-list-panel" id="presetsAll"></div>
+      <div class="preset-list-panel" id="presetsYours"><div style="padding:20px 16px;color:rgba(255,255,255,.5);font-size:14px">No saved presets yet.</div></div>
+    </div>
+    <div class="mob-tool-panel" id="panelCrop">
+      <div class="mob-crop-action-bar">
+        <div class="mob-crop-title" id="mobCropAspectLabel">Custom</div>
+        <div class="mob-crop-btns"><button class="mob-crop-btn" id="mobCropUndo">↺</button></div>
+      </div>
+      <div class="crop-arc-wrap">
+        <div class="crop-arc-ruler"><div class="crop-arc-inner" id="cropArcInner"></div></div>
+        <div class="crop-arc-deg" id="cropArcDeg">0.00°</div>
+      </div>
+      <div class="crop-controls">
+        <button class="crop-ctrl-btn" id="mobCropLock"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></button>
+        <div style="flex:1"></div>
+        <button class="crop-ctrl-btn" id="mobCropRotateCW"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-3.47"/></svg></button>
+        <button class="crop-ctrl-btn" id="mobCropFlip"><svg viewBox="0 0 24 24"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h3M16 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><line x1="12" y1="3" x2="12" y2="21"/></svg></button>
+      </div>
+      <div class="crop-cats">
+        <button class="crop-cat on" data-cc="aspect">Aspect</button>
+        <button class="crop-cat" data-cc="geometry">Geometry</button>
+      </div>
+      <div class="crop-aspects" id="cropAspects">
+        <button class="crop-aspect-btn on" data-ratio="free"><div class="crop-aspect-icon">✦</div>Original</button>
+        <button class="crop-aspect-btn" data-ratio="1:1"><div class="crop-aspect-icon">1:1</div>Square</button>
+        <button class="crop-aspect-btn" data-ratio="4:5"><div class="crop-aspect-icon">4:5</div>Instagram</button>
+        <button class="crop-aspect-btn" data-ratio="16:9"><div class="crop-aspect-icon">16:9</div>YouTube</button>
+        <button class="crop-aspect-btn" data-ratio="9:16"><div class="crop-aspect-icon">9:16</div>TikTok</button>
+        <button class="crop-aspect-btn" data-ratio="4:3"><div class="crop-aspect-icon">4:3</div>Facebook</button>
+        <button class="crop-aspect-btn" data-ratio="3:2"><div class="crop-aspect-icon">3:2</div>Classic</button>
+      </div>
+      <div class="crop-done-bar">
+        <button class="crop-done-cancel" id="mobCropCancel">✕</button>
+        <span class="crop-done-label">Crop &amp; straighten</span>
+        <button class="crop-done-ok" id="mobCropDone">✓</button>
+      </div>
+    </div>
+    <div class="mob-tool-panel active" id="panelEdit">
+      <div class="mob-edit-cats" id="mobEditCats">
+        <button class="mob-edit-cat on" data-ec="light">Light</button>
+        <button class="mob-edit-cat" data-ec="color">Color</button>
+        <button class="mob-edit-cat" data-ec="effects">Effects</button>
+        <button class="mob-edit-cat" data-ec="detail">Detail</button>
+        <button class="mob-edit-cat" data-ec="optics">Optics</button>
+      </div>
+      <div class="mob-edit-sliders" id="mobEditSliders"></div>
+    </div>
+    <div class="mob-tool-panel" id="panelMasking">
+      <div class="masking-panel-tabs">
+        <button class="mask-tab on" data-mt="recommended">Recommended</button>
+        <button class="mask-tab" data-mt="yours">Yours</button>
+      </div>
+      <div id="maskingRecommended">
+        <div class="adaptive-list-item" data-mask="brush"><div class="adaptive-thumb">🖌️</div><div class="adaptive-name">Brush</div><div class="adaptive-arrow">›</div></div>
+        <div class="adaptive-list-item" data-mask="radial"><div class="adaptive-thumb">◎</div><div class="adaptive-name">Radial Gradient</div><div class="adaptive-arrow">›</div></div>
+        <div class="adaptive-list-item" data-mask="linear"><div class="adaptive-thumb">▦</div><div class="adaptive-name">Linear Gradient</div><div class="adaptive-arrow">›</div></div>
+      </div>
+      <div id="maskingYours" style="display:none">
+        <div class="mask-add-row">
+          <button class="mask-add-btn" id="mobAddBrush">+ Brush</button>
+          <button class="mask-add-btn" id="mobAddRadial">+ Radial</button>
+          <button class="mask-add-btn" id="mobAddLinear">+ Grad</button>
+        </div>
+        <div id="mobMaskList"></div>
+      </div>
+    </div>
+    <div class="mob-tool-panel" id="panelRemove">
+      <div class="remove-panel">
+        <div class="remove-row">
+          <span class="remove-label">Size</span>
+          <input type="range" id="mobSpotSize" min="5" max="100" value="30" style="flex:1;margin:0 10px">
+          <span style="font-size:13px;color:rgba(255,255,255,.7);min-width:28px;text-align:right" id="mobSpotSizeVal">30</span>
+        </div>
+        <div style="display:flex;justify-content:flex-end;padding-top:4px">
+          <button class="mob-edit-hbtn" id="mobSpotDone" style="color:var(--amber);width:auto;padding:0 16px;font-size:13px;font-weight:600">Done</button>
+        </div>
+      </div>
+    </div>
+    <div class="mob-tool-bar">
+      <button class="mob-tool-tab" id="mobTabActions" data-tool="actions"><svg viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Actions</button>
+      <button class="mob-tool-tab" id="mobTabPresets" data-tool="presets"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>Presets</button>
+      <button class="mob-tool-tab" id="mobTabCrop" data-tool="crop"><svg viewBox="0 0 24 24"><polyline points="6.13 1 6 16 21 15.87"/><polyline points="1 6.13 16 6 15.87 21"/></svg>Crop</button>
+      <button class="mob-tool-tab on" id="mobTabEdit" data-tool="edit"><svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><circle cx="9" cy="6" r="2.5" fill="white" stroke="none"/><circle cx="15" cy="12" r="2.5" fill="white" stroke="none"/><circle cx="9" cy="18" r="2.5" fill="white" stroke="none"/></svg>Edit</button>
+      <button class="mob-tool-tab" id="mobTabMasking" data-tool="masking"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="5"/><line x1="12" y1="2" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="22"/><line x1="2" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="22" y2="12"/></svg>Masking</button>
+      <button class="mob-tool-tab" id="mobTabRemove" data-tool="remove"><svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>Remove</button>
+    </div>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -3940,6 +4192,275 @@ const _origOnPhotoChanged=onPhotoChanged;
     if(!wlRequested&&sel()){ wlRequested=true; _requestWakeLock(); }
     origRender.apply(this,arguments);
   };
+})();
+
+/* ============================================================
+   MOBILE LIGHTROOM-STYLE UI
+   Only active on screens ≤ 768px.
+   ============================================================ */
+(function initMobUI(){
+  if(window.innerWidth > 768) return;
+
+  const G=id=>document.getElementById(id);
+  const QA=sel=>[...document.querySelectorAll(sel)];
+
+  /* ── SIDEBAR ── */
+  const sidebar=G('sidebar'), sidebarOv=G('sidebarOverlay');
+  function openSidebar(){ sidebar&&sidebar.classList.add('open'); sidebarOv&&sidebarOv.classList.add('open'); }
+  function closeSidebar(){ sidebar&&sidebar.classList.remove('open'); sidebarOv&&sidebarOv.classList.remove('open'); }
+  G('libHamburger')&&G('libHamburger').addEventListener('click',openSidebar);
+  sidebarOv&&sidebarOv.addEventListener('click',closeSidebar);
+  G('sidebarImport')&&G('sidebarImport').addEventListener('click',()=>{ closeSidebar(); G('file').click(); });
+  G('sidebarExport')&&G('sidebarExport').addEventListener('click',()=>{ closeSidebar(); openExport(); });
+  G('sidebarSettings')&&G('sidebarSettings').addEventListener('click',()=>{ closeSidebar(); G('settingsModal').classList.remove('hide'); });
+  G('sidebarClear')&&G('sidebarClear').addEventListener('click',()=>{
+    closeSidebar();
+    if(!state.photos.length){toast('No photos to clear');return;}
+    if(!confirm('Delete all '+state.photos.length+' photos?'))return;
+    deletePhotos(state.photos.map(p=>p.id));
+  });
+
+  /* ── LIBRARY / EDITOR SWITCHING ── */
+  const libView=G('libView'), libBotNav=G('libBottomNav'), mobEditView=G('mobEditView'), mobEditImage=G('mobEditImage');
+
+  function showLibrary(){
+    libView&&libView.classList.add('active');
+    libBotNav&&libBotNav.classList.add('active');
+    mobEditView&&mobEditView.classList.remove('active');
+    // Return canvases to their original location
+    const vw=G('viewwrap'), vc=G('view'), oc=G('overlay');
+    if(vw&&vc&&mobEditImage&&mobEditImage.contains(vc)){
+      vw.appendChild(vc); oc&&vw.appendChild(oc);
+      vc.style.cssText=''; if(oc)oc.style.cssText='';
+    }
+  }
+
+  function showEditor(){
+    libView&&libView.classList.remove('active');
+    libBotNav&&libBotNav.classList.remove('active');
+    mobEditView&&mobEditView.classList.add('active');
+    const vc=G('view'), oc=G('overlay');
+    if(mobEditImage&&vc&&!mobEditImage.contains(vc)){
+      mobEditImage.appendChild(vc);
+      if(oc){ mobEditImage.appendChild(oc); oc.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none'; }
+    }
+    if(vc) vc.style.cssText='max-width:100%;max-height:100%;object-fit:contain;display:block';
+    renderStage(); renderMobPresets(); renderMobEditSliders(_mobCat);
+  }
+
+  /* ── LIBRARY GRID ── */
+  const libGrid=G('libGrid'), libEmpty=G('libEmpty');
+  function renderLibGrid(){
+    if(!libGrid) return;
+    if(libEmpty) libEmpty.style.display=state.photos.length?'none':'';
+    QA('#libGrid .year-group').forEach(el=>el.remove());
+    if(!state.photos.length) return;
+    const groups={};
+    state.photos.forEach(p=>{ const yr=p.exif&&p.exif.dateTime?p.exif.dateTime.substring(0,4):'Recent'; if(!groups[yr])groups[yr]=[]; groups[yr].push(p); });
+    Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(yr=>{
+      const photos=groups[yr];
+      const group=document.createElement('div'); group.className='year-group';
+      const hdr=document.createElement('div'); hdr.className='year-header';
+      hdr.innerHTML=yr+'<span class="year-header-right">'+photos.length+' <span style="font-size:18px">›</span></span>';
+      group.appendChild(hdr);
+      const grid=document.createElement('div'); grid.className='year-photos';
+      photos.forEach((p,i)=>{
+        const tile=document.createElement('div'); tile.className='lib-photo'+(i%7===3?' wide':'');
+        const lps=document.createElement('div'); lps.className='lp-sel'; tile.appendChild(lps);
+        const lpb=document.createElement('div'); lpb.className='lp-badge'; tile.appendChild(lpb);
+        if(p.thumb){ const tc=p.thumb.cloneNode(true); tc.style.cssText='width:100%;height:100%;object-fit:cover;display:block;position:absolute;top:0;left:0'; tile.insertBefore(tc,lps); }
+        tile.addEventListener('click',()=>{
+          state.selId=p.id; onPhotoChanged(); renderThumbs(); renderStage(); syncSliders(); drawCurve(); renderLooks(); updateChrome();
+          showEditor(); activateMobTool('edit');
+        });
+        grid.appendChild(tile);
+      });
+      group.appendChild(grid);
+      libGrid.insertBefore(group,libEmpty);
+    });
+  }
+
+  G('libFabImport')&&G('libFabImport').addEventListener('click',()=>G('file').click());
+  G('mobEditBack')&&G('mobEditBack').addEventListener('click',()=>{ showLibrary(); renderLibGrid(); });
+  G('mobEditShare')&&G('mobEditShare').addEventListener('click',openExport);
+  G('mobEditUndo')&&G('mobEditUndo').addEventListener('click',()=>G('undoBtn').click());
+
+  /* ── 6-TAB TOOL BAR ── */
+  function activateMobTool(tool){
+    QA('.mob-tool-tab').forEach(t=>t.classList.remove('on'));
+    QA('.mob-tool-panel').forEach(p=>p.classList.remove('active'));
+    const tid='mobTab'+tool.charAt(0).toUpperCase()+tool.slice(1);
+    const pid='panel'+tool.charAt(0).toUpperCase()+tool.slice(1);
+    G(tid)&&G(tid).classList.add('on'); G(pid)&&G(pid).classList.add('active');
+    if(tool==='crop'){ enterCropMode(); }
+    else if(state.cropMode){ exitCropMode(false); }
+    if(tool==='remove'){ if(!state.spotMode)toggleSpotMode(); }
+    else if(state.spotMode){ toggleSpotMode(); }
+    if(tool==='edit') renderMobEditSliders(_mobCat);
+  }
+  QA('.mob-tool-tab').forEach(tab=>tab.addEventListener('click',()=>activateMobTool(tab.dataset.tool)));
+
+  /* ── ACTIONS ── */
+  G('actAuto')&&G('actAuto').addEventListener('click',()=>{ G('autoEdit').click(); toast('Auto-tone applied'); });
+  G('actEnhance')&&G('actEnhance').addEventListener('click',()=>{ G('autoEdit').click(); toast('Enhanced'); });
+  G('actFixAngle')&&G('actFixAngle').addEventListener('click',()=>activateMobTool('crop'));
+  G('actSubject')&&G('actSubject').addEventListener('click',()=>toast('Subject masking — use Masking tab'));
+  G('actBackground')&&G('actBackground').addEventListener('click',()=>toast('Background tool coming soon'));
+
+  /* ── EDIT PANEL ── */
+  const EDIT_CATS={
+    light:[{l:'Exposure',k:'exposure',mn:-2,mx:2,st:0.01},{l:'Contrast',k:'contrast',mn:-100,mx:100},{l:'Highlights',k:'highlights',mn:-100,mx:100},{l:'Shadows',k:'shadows',mn:-100,mx:100},{l:'Whites',k:'whites',mn:-100,mx:100},{l:'Blacks',k:'blacks',mn:-100,mx:100}],
+    color:[{l:'Temperature',k:'temp',mn:-100,mx:100},{l:'Tint',k:'tint',mn:-100,mx:100},{l:'Vibrance',k:'vibrance',mn:-100,mx:100},{l:'Saturation',k:'saturation',mn:-100,mx:100}],
+    effects:[{l:'Clarity',k:'clarity',mn:-100,mx:100},{l:'Dehaze',k:'dehaze',mn:-100,mx:100}],
+    detail:[{l:'Sharpening',k:'sharpen',mn:0,mx:100},{l:'Luminance NR',k:'denoiseL',mn:0,mx:100},{l:'Color NR',k:'denoiseC',mn:0,mx:100}],
+    optics:[{l:'Distortion',k:'distort',mn:-100,mx:100},{l:'Vignette',k:'vignette2',mn:-100,mx:0},{l:'Vertical',k:'vertPersp',mn:-100,mx:100},{l:'Horizontal',k:'horizPersp',mn:-100,mx:100}],
+  };
+  let _mobCat='light';
+
+  function renderMobEditSliders(cat){
+    _mobCat=cat; const box=G('mobEditSliders'); if(!box)return; box.innerHTML='';
+    const p=sel();
+    (EDIT_CATS[cat]||[]).forEach(def=>{
+      const v=p?(p.adj[def.k]!=null?p.adj[def.k]:0):0;
+      const pct=((v-def.mn)/(def.mx-def.mn)*100).toFixed(1);
+      const row=document.createElement('div'); row.className='mob-edit-slider';
+      row.innerHTML='<div class="top"><label>'+def.l+'</label><span class="val">'+(def.k==='exposure'?v.toFixed(2):(v>0?'+':'')+v)+'</span></div><input type="range" min="'+def.mn+'" max="'+def.mx+'" step="'+(def.st||1)+'" value="'+v+'" style="--fill:'+pct+'%">';
+      const inp=row.querySelector('input');
+      inp.addEventListener('input',()=>{
+        const ph=sel(); if(!ph)return;
+        ph.adj[def.k]=def.k==='exposure'?parseFloat(inp.value):parseInt(inp.value);
+        const nv=ph.adj[def.k]; row.querySelector('.val').textContent=def.k==='exposure'?nv.toFixed(2):(nv>0?'+':'')+nv;
+        setSliderFill(inp); scheduleRender();
+      });
+      setSliderFill(inp); box.appendChild(row);
+    });
+  }
+
+  document.addEventListener('click',e=>{
+    const cat=e.target.closest('.mob-edit-cat'); if(!cat)return;
+    QA('.mob-edit-cat').forEach(c=>c.classList.remove('on')); cat.classList.add('on');
+    renderMobEditSliders(cat.dataset.ec);
+  });
+
+  /* ── PRESETS PANEL ── */
+  function renderMobPresets(){
+    const ph=sel();
+    function makeList(box,cats){
+      if(!box)return; box.innerHTML='';
+      cats.forEach(cat=>{
+        const items=BUILTIN_PRESETS.filter(b=>b.cat===cat); if(!items.length)return;
+        const row=document.createElement('div'); row.className='preset-list-item';
+        const thumb=document.createElement('div'); thumb.className='preset-list-thumb';
+        if(ph){ const src=lookSource(ph); const cv=document.createElement('canvas'); cv.width=52;cv.height=52; const x=cv.getContext('2d',{willReadFrequently:true}); x.drawImage(src.canvas,0,0,src.w,src.h,0,0,52,52); const img=x.getImageData(0,0,52,52); processImageData(img,items[0].adj); x.putImageData(img,0,0); thumb.appendChild(cv); }
+        const name=document.createElement('div'); name.className='preset-list-name'; name.textContent=cat;
+        const cnt=document.createElement('div'); cnt.className='preset-list-count'; cnt.textContent=items.length;
+        const arr=document.createElement('div'); arr.className='preset-list-arrow'; arr.textContent='›';
+        row.appendChild(thumb); row.appendChild(name); row.appendChild(cnt); row.appendChild(arr);
+        row.addEventListener('click',()=>{
+          const sub=row.nextElementSibling; if(sub&&sub.classList.contains('preset-sub')){ sub.remove(); return; }
+          const subBox=document.createElement('div'); subBox.className='preset-sub';
+          items.forEach(lk=>{
+            const s=document.createElement('div'); s.style.cssText='display:flex;align-items:center;gap:10px;padding:10px 16px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05)';
+            const tc=document.createElement('div'); tc.style.cssText='width:40px;height:40px;border-radius:5px;overflow:hidden;background:#333;flex-shrink:0';
+            if(ph){ const src2=lookSource(ph);const cv2=document.createElement('canvas');cv2.width=40;cv2.height=40;const x2=cv2.getContext('2d',{willReadFrequently:true});x2.drawImage(src2.canvas,0,0,src2.w,src2.h,0,0,40,40);const img2=x2.getImageData(0,0,40,40);processImageData(img2,lk.adj);x2.putImageData(img2,0,0);tc.appendChild(cv2); }
+            const nm=document.createElement('span'); nm.style.cssText='font-size:13px;color:#fff'; nm.textContent=lk.name;
+            s.appendChild(tc); s.appendChild(nm);
+            s.addEventListener('click',ev=>{ ev.stopPropagation();const ph2=sel();if(!ph2)return;pushHistory();ph2.adj=structuredClone(lk.adj);syncSliders();drawCurve();renderStage();toast(lk.name); });
+            subBox.appendChild(s);
+          });
+          row.insertAdjacentElement('afterend',subBox);
+        });
+        box.appendChild(row);
+      });
+    }
+    const allCats=[...new Set(BUILTIN_PRESETS.map(p=>p.cat))];
+    const recCats=['Cinematic','Landscape','Nature','Portrait','Film','Light & Mood'];
+    makeList(G('presetsRecommended'),recCats.filter(c=>allCats.includes(c)));
+    makeList(G('presetsAll'),allCats);
+  }
+
+  document.addEventListener('click',e=>{
+    const tab=e.target.closest('.preset-tab'); if(!tab)return;
+    QA('.preset-tab').forEach(t=>t.classList.remove('on')); tab.classList.add('on');
+    const map={recommended:'presetsRecommended',all:'presetsAll',yours:'presetsYours'};
+    QA('.preset-list-panel').forEach(p=>p.classList.remove('active'));
+    G(map[tab.dataset.ptab])&&G(map[tab.dataset.ptab]).classList.add('active');
+  });
+
+  /* ── CROP PANEL ── */
+  const arcInner=G('cropArcInner');
+  if(arcInner){
+    for(let d=-45;d<=45;d++){ const t=document.createElement('div'); t.className='crop-arc-tick'+(d===0?' center-tick':d%5===0?' major':''); arcInner.appendChild(t); }
+    let arcDrag=null;
+    arcInner.parentElement.addEventListener('pointerdown',e=>{ arcDrag={x:e.clientX,ang:sel()?(sel().adj.angle||0):0}; arcInner.parentElement.setPointerCapture(e.pointerId); },{passive:false});
+    arcInner.parentElement.addEventListener('pointermove',e=>{
+      if(!arcDrag)return; const p=sel(); if(!p)return;
+      p.adj.angle=clamp(Math.round((arcDrag.ang+(e.clientX-arcDrag.x)*0.2)*10)/10,-45,45);
+      G('cropArcDeg')&&(G('cropArcDeg').textContent=p.adj.angle.toFixed(2)+'°');
+      const ci=G('cropAngle'); if(ci){ci.value=p.adj.angle;G('cropAngleVal').textContent=p.adj.angle.toFixed(1)+'°';}
+      scheduleRender(50);
+    });
+    arcInner.parentElement.addEventListener('pointerup',()=>{ arcDrag=null; });
+  }
+
+  document.addEventListener('click',e=>{
+    const btn=e.target.closest('.crop-aspect-btn'); if(!btn)return;
+    QA('.crop-aspect-btn').forEach(b=>b.classList.remove('on')); btn.classList.add('on');
+    G('mobCropAspectLabel')&&(G('mobCropAspectLabel').textContent=btn.lastChild.textContent.trim());
+    const maps={'1:1':[1,1],'4:5':[4,5],'16:9':[16,9],'9:16':[9,16],'4:3':[4,3],'3:2':[3,2]};
+    if(btn.dataset.ratio==='free'){ cropAspect=null; }
+    else if(maps[btn.dataset.ratio]){ cropAspect=maps[btn.dataset.ratio]; applyCropAspect(); }
+  });
+
+  document.addEventListener('click',e=>{
+    const cc=e.target.closest('.crop-cat'); if(!cc)return;
+    QA('.crop-cat').forEach(c=>c.classList.remove('on')); cc.classList.add('on');
+  });
+
+  G('mobCropDone')&&G('mobCropDone').addEventListener('click',()=>{ exitCropMode(true); activateMobTool('edit'); });
+  G('mobCropCancel')&&G('mobCropCancel').addEventListener('click',()=>{ exitCropMode(false); activateMobTool('edit'); });
+  G('mobCropRotateCW')&&G('mobCropRotateCW').addEventListener('click',()=>{ const p=sel();if(!p)return;pushHistory();const c=p.adj.crop||{l:0,t:0,r:1,b:1};p.adj.crop={l:c.t,t:1-c.r,r:c.b,b:1-c.l};renderStage(); });
+  G('mobCropFlip')&&G('mobCropFlip').addEventListener('click',()=>{ const p=sel();if(!p)return;p.adj.flipH=!p.adj.flipH;renderStage(); });
+  G('mobCropUndo')&&G('mobCropUndo').addEventListener('click',()=>G('undoBtn').click());
+
+  /* ── MASKING PANEL ── */
+  document.addEventListener('click',e=>{
+    const mt=e.target.closest('.mask-tab'); if(!mt)return;
+    QA('.mask-tab').forEach(t=>t.classList.remove('on')); mt.classList.add('on');
+    G('maskingRecommended')&&(G('maskingRecommended').style.display=mt.dataset.mt==='recommended'?'':'none');
+    G('maskingYours')&&(G('maskingYours').style.display=mt.dataset.mt==='yours'?'':'none');
+  });
+
+  document.addEventListener('click',e=>{
+    const item=e.target.closest('.adaptive-list-item'); if(!item)return;
+    const type=item.dataset.mask;
+    QA('.mask-tab').forEach(t=>t.classList.toggle('on',t.dataset.mt==='yours'));
+    G('maskingRecommended')&&(G('maskingRecommended').style.display='none');
+    G('maskingYours')&&(G('maskingYours').style.display='');
+    const m={brush:'addBrush',radial:'addRadial',linear:'addLinear'};
+    G(m[type])&&G(m[type]).click();
+  });
+
+  G('mobAddBrush')&&G('mobAddBrush').addEventListener('click',()=>G('addBrush').click());
+  G('mobAddRadial')&&G('mobAddRadial').addEventListener('click',()=>G('addRadial').click());
+  G('mobAddLinear')&&G('mobAddLinear').addEventListener('click',()=>G('addLinear').click());
+
+  /* ── REMOVE PANEL ── */
+  const mobSpotSize=G('mobSpotSize');
+  mobSpotSize&&mobSpotSize.addEventListener('input',()=>{
+    G('mobSpotSizeVal').textContent=mobSpotSize.value;
+    const orig=G('spotSize');if(orig){orig.value=mobSpotSize.value;orig.dispatchEvent(new Event('input'));}
+  });
+  G('mobSpotDone')&&G('mobSpotDone').addEventListener('click',()=>{ if(state.spotMode)toggleSpotMode();activateMobTool('edit'); });
+
+  /* ── HOOK INTO APP ── */
+  const _origRenderThumbs=renderThumbs;
+  window.renderThumbs=function(){ _origRenderThumbs.apply(this,arguments); if(window.innerWidth<=768)renderLibGrid(); };
+
+  /* ── INITIAL STATE ── */
+  renderLibGrid();
+  if(sel()){ showEditor(); activateMobTool('edit'); } else { showLibrary(); }
+
 })();
 
 </script>
