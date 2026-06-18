@@ -43,13 +43,33 @@
 
   /* ── LIBRARY GRID ── */
   const libGrid=G('libGrid'), libEmpty=G('libEmpty');
+  const libTitleEl=document.querySelector('.lib-title');
+  const LIB_FILTER_LABELS={all:'All photos',picks:'Picks',rejects:'Rejected',rated:'Rated 3+'};
+
+  function setLibFilter(mode){
+    state.filterMode=mode;
+    if(libTitleEl) libTitleEl.textContent=LIB_FILTER_LABELS[mode]||'All photos';
+    QA('#libBottomNav .lib-nav-tab').forEach(t=>t.classList.remove('on'));
+    if(mode==='picks') G('libNavGallery')&&G('libNavGallery').classList.add('on');
+    else { G('libNavMain')&&G('libNavMain').classList.add('on'); }
+    renderLibGrid();
+  }
+
   function renderLibGrid(){
     if(!libGrid) return;
-    if(libEmpty) libEmpty.style.display=state.photos.length?'none':'';
+    // Use filtered+sorted photos so the filter state is respected
+    const photos=typeof getSortedFilteredPhotos==='function'?getSortedFilteredPhotos():state.photos;
+    const hasAny=state.photos.length>0;
+    const hasMatch=photos.length>0;
+    if(libEmpty){
+      libEmpty.style.display=hasAny&&!hasMatch?'':'none';
+      if(hasAny&&!hasMatch) libEmpty.innerHTML='<div style="font-size:36px;margin-bottom:16px">🔍</div><div style="font-size:17px;font-weight:700;color:var(--ink);margin-bottom:8px">No '+LIB_FILTER_LABELS[state.filterMode]+'</div><div style="font-size:13px">Try a different filter.</div>';
+      else if(!hasAny) libEmpty.innerHTML='<div style="font-size:52px;margin-bottom:20px">📷</div><div style="font-size:20px;font-weight:700;color:var(--ink);margin-bottom:10px">No photos yet</div><div style="font-size:14px;line-height:1.7">Tap + to import photos from your device.</div>';
+    }
     QA('#libGrid .year-group').forEach(el=>el.remove());
-    if(!state.photos.length) return;
+    if(!photos.length) return;
     const groups={};
-    state.photos.forEach(p=>{ const yr=p.exif&&p.exif.dateTime?p.exif.dateTime.substring(0,4):'Recent'; if(!groups[yr])groups[yr]=[]; groups[yr].push(p); });
+    photos.forEach(p=>{ const yr=p.exif&&p.exif.dateTime?p.exif.dateTime.substring(0,4):'Recent'; if(!groups[yr])groups[yr]=[]; groups[yr].push(p); });
     Object.keys(groups).sort((a,b)=>b.localeCompare(a)).forEach(yr=>{
       const photos=groups[yr];
       const group=document.createElement('div'); group.className='year-group';
@@ -247,6 +267,139 @@
     const orig=G('spotSize');if(orig){orig.value=mobSpotSize.value;orig.dispatchEvent(new Event('input'));}
   });
   G('mobSpotDone')&&G('mobSpotDone').addEventListener('click',()=>{ if(state.spotMode)toggleSpotMode();activateMobTool('edit'); });
+
+  /* ── LIBRARY HEADER: filter, more, nav tabs ── */
+  // Gallery tab → toggle picks filter
+  G('libNavGallery')&&G('libNavGallery').addEventListener('click',()=>{
+    setLibFilter(state.filterMode==='picks'?'all':'picks');
+  });
+  // Community tab → not yet available
+  G('libNavCommunity')&&G('libNavCommunity').addEventListener('click',()=>{
+    G('libNavMain')&&G('libNavMain').classList.add('on');
+    G('libNavCommunity')&&G('libNavCommunity').classList.remove('on');
+    toast('Community features coming in a future update');
+  });
+  // Filter icon → cycle All → Picks → Rejected → Rated 3+
+  G('libFilter')&&G('libFilter').addEventListener('click',()=>{
+    const modes=['all','picks','rejects','rated'];
+    const next=modes[(modes.indexOf(state.filterMode)+1)%modes.length];
+    setLibFilter(next);
+    toast(LIB_FILTER_LABELS[next]);
+  });
+  // More (⋯) → action sheet
+  G('libMore')&&G('libMore').addEventListener('click',()=>{
+    _showActionSheet([
+      {label:'Import Photos',   icon:'⬇', action:()=>G('file').click()},
+      {label:'Export All',      icon:'⬆', action:()=>openExport()},
+      {label:'Settings',        icon:'⚙', action:()=>G('settingsModal').classList.remove('hide')},
+      {label:'Clear All Photos',icon:'🗑', danger:true, action:()=>{
+        if(!state.photos.length){toast('No photos to clear');return;}
+        if(!confirm('Delete all '+state.photos.length+' photos?'))return;
+        deletePhotos(state.photos.map(p=>p.id));
+      }},
+    ]);
+  });
+
+  /* ── MOBILE EDIT HEADER ── */
+  // Save (✓) — edits are non-destructive and auto-saved; confirm and return to library
+  G('mobEditSave')&&G('mobEditSave').addEventListener('click',()=>{
+    if(typeof scheduleSessionSave==='function') scheduleSessionSave();
+    toast('Edits saved ✓');
+    showLibrary(); renderLibGrid();
+  });
+  // More (⋯) — edit-level actions
+  G('mobEditMore')&&G('mobEditMore').addEventListener('click',()=>{
+    const p=sel();
+    _showActionSheet([
+      {label:'Export photo',   icon:'⬆', action:()=>openExport()},
+      {label:'Before / After', icon:'👁', action:()=>{ G('beforeBtn')&&G('beforeBtn').click(); }},
+      {label:'Reset all edits',icon:'↺', action:()=>{ G('resetEdit')&&G('resetEdit').click(); toast('Edits reset'); }},
+      {label:'Delete photo',   icon:'🗑', danger:true, action:()=>{
+        if(!p)return;
+        if(!confirm('Delete "'+p.name+'"?'))return;
+        deletePhotos([p.id]); showLibrary(); renderLibGrid();
+      }},
+    ]);
+  });
+
+  /* ── CROP LOCK ── */
+  let _cropLocked=false;
+  G('mobCropLock')&&G('mobCropLock').addEventListener('click',()=>{
+    const p=sel(); if(!p)return;
+    _cropLocked=!_cropLocked;
+    const btn=G('mobCropLock');
+    if(_cropLocked){
+      const c=p.adj.crop||{l:0,t:0,r:1,b:1};
+      const rb=typeof rotatedBounds==='function'?rotatedBounds(p):{rotW:p.w,rotH:p.h};
+      const cw=(c.r-c.l)*rb.rotW, ch=(c.b-c.t)*rb.rotH;
+      if(cw>0&&ch>0) cropAspect=[cw,ch];
+      if(btn) btn.style.color='var(--amber)';
+      toast('Aspect ratio locked');
+    } else {
+      cropAspect=null;
+      if(btn) btn.style.color='';
+      toast('Aspect ratio free');
+    }
+  });
+
+  /* ── ACTIONS: SUBJECT & BACKGROUND ── */
+  // Subject → add a radial mask centred on the image; user fine-tunes from there
+  G('actSubject')&&G('actSubject').addEventListener('click',()=>{
+    const p=sel(); if(!p){toast('Select a photo first');return;}
+    pushHistory();
+    if(!p.masks) p.masks=[];
+    p.masks.push({id:Date.now(),type:'radial',cx:0.5,cy:0.5,rx:0.28,ry:0.35,
+                  adj:{exposure:0,contrast:0,saturation:0,temp:0},feather:60,inverted:false});
+    state.activeMask=p.masks.length-1;
+    activateMobTool('masking');
+    QA('.mask-tab').forEach(t=>t.classList.toggle('on',t.dataset.mt==='yours'));
+    G('maskingRecommended')&&(G('maskingRecommended').style.display='none');
+    G('maskingYours')&&(G('maskingYours').style.display='');
+    renderStage();
+    toast('Subject mask added — adjust in Masking');
+  });
+  // Background → same but inverted (affects area outside the radial)
+  G('actBackground')&&G('actBackground').addEventListener('click',()=>{
+    const p=sel(); if(!p){toast('Select a photo first');return;}
+    pushHistory();
+    if(!p.masks) p.masks=[];
+    p.masks.push({id:Date.now(),type:'radial',cx:0.5,cy:0.5,rx:0.28,ry:0.35,
+                  adj:{exposure:0,contrast:0,saturation:0,temp:0},feather:60,inverted:true});
+    state.activeMask=p.masks.length-1;
+    activateMobTool('masking');
+    QA('.mask-tab').forEach(t=>t.classList.toggle('on',t.dataset.mt==='yours'));
+    G('maskingRecommended')&&(G('maskingRecommended').style.display='none');
+    G('maskingYours')&&(G('maskingYours').style.display='');
+    renderStage();
+    toast('Background mask added — adjust in Masking');
+  });
+
+  /* ── ACTION SHEET (reusable slide-up menu) ── */
+  function _showActionSheet(items){
+    const old=document.querySelector('.mob-action-sheet-wrap'); if(old)old.remove();
+    const wrap=document.createElement('div');
+    wrap.className='mob-action-sheet-wrap';
+    wrap.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.45)';
+    const sheet=document.createElement('div');
+    sheet.style.cssText='position:absolute;bottom:0;left:0;right:0;background:#1c1f26;border-radius:18px 18px 0 0;padding:8px 0 calc(20px + env(safe-area-inset-bottom))';
+    const pill=document.createElement('div');
+    pill.style.cssText='width:36px;height:4px;background:rgba(255,255,255,.18);border-radius:2px;margin:10px auto 12px';
+    sheet.appendChild(pill);
+    items.forEach(item=>{
+      const btn=document.createElement('button');
+      btn.style.cssText='display:flex;align-items:center;gap:16px;width:100%;padding:15px 22px;border:0;background:transparent;color:'+(item.danger?'#e5687a':'#e7e9ed')+';font-size:16px;font-family:inherit;cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent';
+      btn.innerHTML='<span style="font-size:22px;width:30px;text-align:center">'+item.icon+'</span><span>'+item.label+'</span>';
+      btn.addEventListener('click',()=>{ wrap.remove(); item.action(); });
+      btn.addEventListener('touchstart',()=>btn.style.background='rgba(255,255,255,.06)',{passive:true});
+      btn.addEventListener('touchend',()=>btn.style.background='',{passive:true});
+      sheet.appendChild(btn);
+    });
+    wrap.appendChild(sheet);
+    wrap.addEventListener('click',e=>{ if(e.target===wrap)wrap.remove(); });
+    document.body.appendChild(wrap);
+    sheet.style.transform='translateY(100%)';
+    requestAnimationFrame(()=>{ sheet.style.transition='transform .22s ease'; sheet.style.transform=''; });
+  }
 
   /* ── HOOK INTO APP ── */
   const _origRenderThumbs=renderThumbs;
