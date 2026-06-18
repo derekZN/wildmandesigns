@@ -928,7 +928,9 @@
     <button class="mob-edit-hbtn" id="mobEditShare"><svg viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg></button>
     <button class="mob-edit-hbtn" id="mobEditMore"><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5" fill="white" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="white" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="white" stroke="none"/></svg></button>
   </div>
-  <div class="mob-edit-image" id="mobEditImage"></div>
+  <div class="mob-edit-image" id="mobEditImage">
+    <canvas id="mobView" style="display:block;max-width:100%;max-height:100%"></canvas>
+  </div>
   <div class="mob-edit-tools">
     <div class="mob-tool-panel" id="panelActions">
       <div class="actions-panel"><div class="actions-row">
@@ -2053,6 +2055,21 @@ function renderStage(){
   overlay.width=cw; overlay.height=ch; overlay.style.width=cw+'px'; overlay.style.height=ch+'px';
   drawOverlay(); drawHistogram(p);
   if(state.compareMode&&!state.showBefore) drawCompareSplit();
+  // ── Mobile view mirror: copy processed image to #mobView at correct screen size ──
+  const _mobEV=document.getElementById('mobEditView');
+  if(window.innerWidth<=768&&_mobEV&&_mobEV.classList.contains('active')){
+    const _mobV=document.getElementById('mobView');
+    if(_mobV&&viewCanvas.width>0){
+      const _ap=document.querySelector('.mob-tool-panel.active');
+      const _ph=_ap?Math.min(_ap.scrollHeight||0,Math.round(window.innerHeight*0.5)):0;
+      const _aw=window.innerWidth,_ah=Math.max(100,window.innerHeight-52-68-_ph);
+      const _s=Math.min(_aw/p.w,_ah/p.h);
+      const _cw=Math.round(p.w*_s),_ch=Math.round(p.h*_s);
+      _mobV.width=_cw; _mobV.height=_ch;
+      _mobV.style.width=_cw+'px'; _mobV.style.height=_ch+'px';
+      _mobV.getContext('2d').drawImage(viewCanvas,0,0,_cw,_ch);
+    }
+  }
 }
 function fitView(){ if(sel()) renderStage(); }
 window.addEventListener('resize',()=>{ clearTimeout(renderTimer); renderTimer=setTimeout(fitView,80); });
@@ -4240,24 +4257,15 @@ const _origOnPhotoChanged=onPhotoChanged;
     libView&&libView.classList.add('active');
     libBotNav&&libBotNav.classList.add('active');
     mobEditView&&mobEditView.classList.remove('active');
-    // Return canvases to their original location
-    const vw=G('viewwrap'), vc=G('view'), oc=G('overlay');
-    if(vw&&vc&&mobEditImage&&mobEditImage.contains(vc)){
-      vw.appendChild(vc); oc&&vw.appendChild(oc);
-      vc.style.cssText=''; if(oc)oc.style.cssText='';
-    }
+    // Clear the mob view canvas when going back to library
+    const mv=G('mobView'); if(mv){mv.width=1;mv.height=1;}
   }
 
   function showEditor(){
     libView&&libView.classList.remove('active');
     libBotNav&&libBotNav.classList.remove('active');
     mobEditView&&mobEditView.classList.add('active');
-    const vc=G('view'), oc=G('overlay');
-    if(mobEditImage&&vc&&!mobEditImage.contains(vc)){
-      mobEditImage.appendChild(vc);
-      if(oc){ mobEditImage.appendChild(oc); oc.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none'; }
-    }
-    if(vc) vc.style.cssText='display:block;max-width:100%;max-height:100%';
+    // #mobView in #mobEditImage gets the mirrored image from renderStage — no canvas moving needed
     requestAnimationFrame(()=>{ renderStage(); renderMobPresets(); renderMobEditSliders(_mobCat); });
   }
 
@@ -4281,7 +4289,7 @@ const _origOnPhotoChanged=onPhotoChanged;
         const tile=document.createElement('div'); tile.className='lib-photo'+(i%7===3?' wide':'');
         const lps=document.createElement('div'); lps.className='lp-sel'; tile.appendChild(lps);
         const lpb=document.createElement('div'); lpb.className='lp-badge'; tile.appendChild(lpb);
-        if(p.thumb){ const tc=document.createElement('canvas');tc.width=p.thumb.width;tc.height=p.thumb.height;tc.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block';tc.getContext('2d').drawImage(p.thumb,0,0);tile.insertBefore(tc,lps); }
+        if(p.thumb&&p.thumb.width>0){try{const _img=document.createElement('img');_img.src=p.thumb.toDataURL();_img.style.cssText='position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;display:block';tile.insertBefore(_img,lps);}catch(e){}}
         tile.addEventListener('click',()=>{
           state.selId=p.id; onPhotoChanged(); renderThumbs(); renderStage(); syncSliders(); drawCurve(); renderLooks(); updateChrome();
           showEditor(); activateMobTool('edit');
