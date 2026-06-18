@@ -1,9 +1,10 @@
 /* WildmanDesigns service worker — cache-first, offline-capable */
-const CACHE = 'wildman-v26';
+const CACHE = 'wildman-v27';
 const PRECACHE = [
   './index.html',
   './styles.css',
   './engine.js',
+  './glrender.js',
   './worker.js',
   './idb.js',
   './app.js',

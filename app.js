@@ -722,6 +722,44 @@ function renderStage(){
   }
 
   if(!state.showBefore){
+    const hasMasks=(p.masks&&p.masks.length>0)||(p.spots&&p.spots.length>0);
+    const needsCPU=!GL.canHandleAdj(p.adj)||hasMasks;
+
+    // ── WebGL fast path: no CPU needed, runs in ~2ms ──
+    if(typeof GL!=='undefined' && GL.available && !needsCPU){
+      // Use WebGL to process the cropped source region directly
+      // We render the crop/transform output through the GL shader
+      const glOk=GL.renderTo(p.bitmap, p.adj, displayCanvas, pcwF, pchF);
+      if(glOk){
+        displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
+        displayCanvas.classList.remove('hide');
+        // Also update viewCanvas so drawOverlay/histogram work correctly
+        viewCanvas.width=pcwF; viewCanvas.height=pchF;
+        vctx.drawImage(displayCanvas,0,0);
+        lastRegion={sx,sy,sw,sh,cw,ch};
+        overlay.width=cw; overlay.height=ch;
+        overlay.style.width=cw+'px'; overlay.style.height=ch+'px';
+        drawOverlay(); drawHistogram(p);
+        if(state.compareMode) drawCompareSplit();
+        // Mobile mirror
+        const _mv=document.getElementById('mobEditView');
+        if(window.innerWidth<=768&&_mv&&_mv.classList.contains('active')){
+          const _mb=document.getElementById('mobView');
+          if(_mb){
+            const _ap=document.querySelector('.mob-tool-panel.active');
+            const _ph=_ap?Math.min(_ap.scrollHeight||0,Math.round(window.innerHeight*0.5)):0;
+            const _s=Math.min(window.innerWidth/p.w,Math.max(100,window.innerHeight-52-68-_ph)/p.h);
+            const _cw2=Math.round(p.w*_s),_ch2=Math.round(p.h*_s);
+            _mb.width=_cw2; _mb.height=_ch2;
+            _mb.style.width=_cw2+'px'; _mb.style.height=_ch2+'px';
+            _mb.getContext('2d').drawImage(displayCanvas,0,0,_cw2,_ch2);
+          }
+        }
+        return;
+      }
+      // GL failed, fall through to CPU path
+    }
+
     const img=vctx.getImageData(0,0,pcw,pch);
 
     // After processing: apply masks/spots/lens then display
@@ -736,15 +774,15 @@ function renderStage(){
     }
 
     if(_procWorker){
-      // ── Async path: transfer pixels to worker, never block main thread ──
+      // ── Async CPU path via Web Worker ──
       const xfer=img.data.buffer;
       _procWorker.onmessage=e=>{
         if(e.data.id===_gid)_after(new ImageData(new Uint8ClampedArray(e.data.buf),pcw,pch));
       };
       _procWorker.postMessage({buf:xfer,w:pcw,h:pch,adj:structuredClone(p.adj),id:_gid},[xfer]);
-      return; // render happens in worker callback
+      return;
     }
-    // ── Sync fallback ──
+    // ── Sync CPU fallback ──
     processImageData(img,p.adj);
     _after(img);
   } else {
@@ -753,6 +791,44 @@ function renderStage(){
 }
 function fitView(){ if(sel()) renderStage(); }
 window.addEventListener('resize',()=>{ clearTimeout(renderTimer); renderTimer=setTimeout(fitView,80); });
+
+/* ── renderPreview: instant GPU-only preview for slider feedback ─────────
+   Runs on every slider input (no debounce). Uses WebGL to render a full-
+   resolution preview in ~2ms. If WebGL is unavailable or the adjustment
+   requires CPU ops (clarity, NR, lens), skips — the debounced full render
+   will handle it. Also drives the mobile #mobView mirror.                  */
+function renderPreview(){
+  const p=sel(); if(!p||!p.bitmap) return;
+  if(typeof GL==='undefined'||!GL.available) return;
+
+  // Determine display dimensions (same logic as renderStage)
+  const mobEV=document.getElementById('mobEditView');
+  const isMobEdit=window.innerWidth<=768&&mobEV&&mobEV.classList.contains('active');
+  let availW, availH;
+  if(isMobEdit){
+    const ap=document.querySelector('.mob-tool-panel.active');
+    const ph=ap?Math.min(ap.scrollHeight||0,Math.round(window.innerHeight*0.5)):0;
+    availW=window.innerWidth; availH=Math.max(100,window.innerHeight-52-68-ph);
+  } else {
+    const box=stage.getBoundingClientRect();
+    availW=Math.max(64,box.width-36); availH=Math.max(64,box.height-36);
+  }
+  const scale=Math.min(availW/p.w, availH/p.h);
+  const cw=Math.round(p.w*scale), ch=Math.round(p.h*scale);
+
+  // Render straight to the display canvas via WebGL
+  const ok=GL.renderTo(p.bitmap, p.adj, displayCanvas, cw, ch);
+  if(!ok) return;
+  displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
+  displayCanvas.classList.remove('hide');
+
+  // Mobile mirror
+  if(isMobEdit){
+    const mv=document.getElementById('mobView');
+    if(mv){ mv.width=cw; mv.height=ch; mv.style.width=cw+'px'; mv.style.height=ch+'px';
+      mv.getContext('2d').drawImage(displayCanvas,0,0); }
+  }
+}
 
 /* ============================================================
    WEB WORKER — processImageData on background thread
@@ -1122,7 +1198,9 @@ $$('input[type=range][data-k]').forEach(inp=>{
   inp.addEventListener('input',()=>{
     const p=sel(); if(!p)return;
     const k=inp.dataset.k; p.adj[k]= k==='exposure'?parseFloat(inp.value):parseInt(inp.value);
-    updateValLabel(k); setSliderFill(inp); scheduleRender(50);
+    updateValLabel(k); setSliderFill(inp);
+    renderPreview();      // instant GPU preview on every slider tick
+    scheduleRender(80);   // full-quality render 80ms after last change
   });
   setSliderFill(inp);
 });
