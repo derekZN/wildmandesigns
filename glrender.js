@@ -38,6 +38,7 @@ const float HW[8] = float[8]( 35.0, 25.0, 25.0, 35.0, 30.0, 35.0, 30.0, 35.0);
 
 /* Split tone */
 uniform float u_stSH, u_stSS, u_stHH, u_stHS, u_stBal;
+uniform float u_grain;
 
 varying vec2 v_tc;
 
@@ -119,6 +120,14 @@ void main(){
     if(u_stSS>0.001){ vec3 sc=hsl2rgb(u_stSH,u_stSS,0.5); c+=(sc-0.5)*sw*0.4; }
     if(u_stHS>0.001){ vec3 hc=hsl2rgb(u_stHH,u_stHS,0.5); c+=(hc-0.5)*hw*0.4; }
     c=clamp(c,0.0,1.0);
+  }
+
+  /* Grain */
+  if(u_grain>0.0){
+    vec2 gp=floor(v_tc*vec2(4096.0));
+    float h=fract(sin(dot(gp,vec2(127.1,311.7)))*43758.5453);
+    float h2=fract(sin(dot(gp+1.0,vec2(269.5,183.3)))*43758.5453);
+    c=clamp(c+(h+h2-1.0)*u_grain*0.12,0.0,1.0);
   }
 
   /* 6 ── Per-channel RGB curves */
@@ -220,7 +229,8 @@ void main(){
     return !adj.clarity && !adj.sharpen && !adj.dehaze &&
            !adj.denoiseL && !adj.denoiseC &&
            !adj.distort && !adj.vignette2 &&
-           !adj.vertPersp && !adj.horizPersp;
+           !adj.vertPersp && !adj.horizPersp &&
+           !adj.cubeLut;
   }
 
   /* Render bitmap → destCanvas at width w × height h using WebGL.
@@ -264,6 +274,7 @@ void main(){
 
       /* ── Basic adjustment uniforms ── */
       gl.uniform1f(u('u_expF'), Math.pow(2, adj.exposure||0));
+      gl.uniform1f(u('u_grain'), (adj.grain||0)/100);
       gl.uniform1f(u('u_tempF'),(adj.temp||0)/100);
       gl.uniform1f(u('u_tintF'),(adj.tint||0)/100);
       gl.uniform1f(u('u_sat'),  (adj.saturation||0)/100);

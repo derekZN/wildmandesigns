@@ -94,7 +94,44 @@
   }
 
   G('libFabImport')&&G('libFabImport').addEventListener('click',()=>G('file').click());
-  G('mobEditBack')&&G('mobEditBack').addEventListener('click',()=>{ showLibrary(); renderLibGrid(); });
+  G('mobEditBack')&&G('mobEditBack').addEventListener('click',()=>{ if(typeof window._mobZoomReset==='function')window._mobZoomReset(); showLibrary(); renderLibGrid(); });
+
+  /* Hold finger on image 350ms → show original; release → show edited */
+  const _mie=G('mobEditImage');
+  if(_mie){
+    let _ht=null,_wb=false;
+    _mie.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='touch'&&e.isPrimary){
+        _ht=setTimeout(()=>{_ht=null;_wb=true;haptic(8);
+          if(typeof before==='function')before(true);else{state.showBefore=true;renderStage();}},350);
+      }
+    },{passive:true});
+    function _rl(){if(_ht){clearTimeout(_ht);_ht=null;}if(_wb){_wb=false;
+      if(typeof before==='function')before(false);else{state.showBefore=false;renderStage();}}}
+    _mie.addEventListener('pointerup',_rl);_mie.addEventListener('pointercancel',_rl);
+  }
+
+  /* Pinch-to-zoom + double-tap-to-zoom on the edit image */
+  (function(){
+    const c=G('mobEditImage'),mv=G('mobView');if(!c||!mv)return;
+    let zoom=1,panX=0,panY=0,pd=0,psz=1;
+    function apz(){mv.style.transformOrigin='center center';
+      mv.style.transform=zoom>1.01?'scale('+zoom.toFixed(3)+') translate('+panX.toFixed(1)+'px,'+panY.toFixed(1)+'px)':'';
+    }
+    c.addEventListener('touchstart',e=>{if(e.touches.length===2){pd=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);psz=zoom;}},{passive:true});
+    c.addEventListener('touchmove',e=>{if(e.touches.length===2&&pd>0){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);zoom=Math.min(6,Math.max(1,psz*(d/pd)));apz();}},{passive:true});
+    c.addEventListener('touchend',e=>{if(e.touches.length<2)pd=0;},{passive:true});
+    let dbt=null;
+    c.addEventListener('touchend',e=>{if(e.changedTouches.length!==1||pd>0)return;
+      if(dbt){clearTimeout(dbt);dbt=null;zoom=zoom>1.5?1:2.5;panX=0;panY=0;apz();haptic(6);}
+      else dbt=setTimeout(()=>{dbt=null;},300);
+    },{passive:true});
+    let ps=null;
+    c.addEventListener('pointerdown',e=>{if(zoom>1&&e.pointerType==='touch'&&e.isPrimary)ps={x:e.clientX,y:e.clientY,px:panX,py:panY};},{passive:true});
+    c.addEventListener('pointermove',e=>{if(!ps||!e.isPrimary)return;panX=ps.px+(e.clientX-ps.x)/zoom;panY=ps.py+(e.clientY-ps.y)/zoom;apz();},{passive:true});
+    c.addEventListener('pointerup',()=>{ps=null;});c.addEventListener('pointercancel',()=>{ps=null;});
+    window._mobZoomReset=function(){zoom=1;panX=0;panY=0;apz();};
+  })();
   G('mobEditShare')&&G('mobEditShare').addEventListener('click',openExport);
   G('mobEditUndo')&&G('mobEditUndo').addEventListener('click',()=>G('undoBtn').click());
 
@@ -126,7 +163,7 @@
   const EDIT_CATS={
     light:[{l:'Exposure',k:'exposure',mn:-2,mx:2,st:0.01},{l:'Contrast',k:'contrast',mn:-100,mx:100},{l:'Highlights',k:'highlights',mn:-100,mx:100},{l:'Shadows',k:'shadows',mn:-100,mx:100},{l:'Whites',k:'whites',mn:-100,mx:100},{l:'Blacks',k:'blacks',mn:-100,mx:100}],
     color:[{l:'Temperature',k:'temp',mn:-100,mx:100},{l:'Tint',k:'tint',mn:-100,mx:100},{l:'Vibrance',k:'vibrance',mn:-100,mx:100},{l:'Saturation',k:'saturation',mn:-100,mx:100}],
-    effects:[{l:'Clarity',k:'clarity',mn:-100,mx:100},{l:'Dehaze',k:'dehaze',mn:-100,mx:100}],
+    effects:[{l:'Clarity',k:'clarity',mn:-100,mx:100},{l:'Dehaze',k:'dehaze',mn:-100,mx:100},{l:'Grain',k:'grain',mn:0,mx:100}],
     detail:[{l:'Sharpening',k:'sharpen',mn:0,mx:100},{l:'Luminance NR',k:'denoiseL',mn:0,mx:100},{l:'Color NR',k:'denoiseC',mn:0,mx:100}],
     optics:[{l:'Distortion',k:'distort',mn:-100,mx:100},{l:'Vignette',k:'vignette2',mn:-100,mx:0},{l:'Vertical',k:'vertPersp',mn:-100,mx:100},{l:'Horizontal',k:'horizPersp',mn:-100,mx:100}],
   };
@@ -141,11 +178,30 @@
       const row=document.createElement('div'); row.className='mob-edit-slider';
       row.innerHTML='<div class="top"><label>'+def.l+'</label><span class="val">'+(def.k==='exposure'?v.toFixed(2):(v>0?'+':'')+v)+'</span></div><input type="range" min="'+def.mn+'" max="'+def.mx+'" step="'+(def.st||1)+'" value="'+v+'" style="--fill:'+pct+'%">';
       const inp=row.querySelector('input');
+      let _prevV=v;
       inp.addEventListener('input',()=>{
         const ph=sel(); if(!ph)return;
         ph.adj[def.k]=def.k==='exposure'?parseFloat(inp.value):parseInt(inp.value);
-        const nv=ph.adj[def.k]; row.querySelector('.val').textContent=def.k==='exposure'?nv.toFixed(2):(nv>0?'+':'')+nv;
-        setSliderFill(inp); scheduleRender();
+        const nv=ph.adj[def.k];
+        if((_prevV<0&&nv>=0)||(_prevV>0&&nv<=0)) haptic(12);
+        _prevV=nv;
+        row.querySelector('.val').textContent=def.k==='exposure'?nv.toFixed(2):(nv>0?'+':'')+nv;
+        setSliderFill(inp);
+        if(typeof renderPreview==='function') renderPreview();
+        scheduleRender(80);
+      });
+      // Double-tap value label to reset to default
+      const _vl=row.querySelector('.val'); let _dt=null;
+      _vl.addEventListener('touchend',e=>{
+        e.preventDefault();
+        if(_dt){clearTimeout(_dt);_dt=null;
+          const ph=sel();if(!ph)return;
+          const dv=typeof DEFAULT_ADJ!=='undefined'?(DEFAULT_ADJ[def.k]||0):0;
+          ph.adj[def.k]=dv;inp.value=dv;_prevV=dv;
+          _vl.textContent=def.k==='exposure'?dv.toFixed(2):(dv>0?'+':'')+dv;
+          setSliderFill(inp);haptic([5,60,5]);
+          if(typeof renderPreview==='function')renderPreview();scheduleRender(80);
+        } else { _dt=setTimeout(()=>{_dt=null;},320); }
       });
       setSliderFill(inp); box.appendChild(row);
     });

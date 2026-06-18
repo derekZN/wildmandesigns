@@ -244,6 +244,13 @@
         </div>
       </div>
 
+      <div class="acc-section" data-sec="effects">
+        <button class="acc-head"><span class="acc-label">Effects</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
+        <div class="acc-body">
+          <div class="slider"><div class="top"><label>Grain</label><span class="val" data-k="grain">0</span></div><input type="range" data-k="grain" min="0" max="100" value="0"></div>
+        </div>
+      </div>
+
       <div class="acc-section" data-sec="lens">
         <button class="acc-head"><span class="acc-label">Lens Corrections</span><svg class="acc-ch" viewBox="0 0 10 10"><polyline points="1,3 5,7 9,3"/></svg></button>
         <div class="acc-body">
@@ -310,6 +317,16 @@
             <button class="btn" id="exportPresets" style="flex:1;justify-content:center">Export .json</button>
             <button class="btn" id="importPresets" style="flex:1;justify-content:center">Import .json</button>
           </div>
+          <div class="grp-h" style="padding-top:4px">Film LUTs <span style="text-transform:none;letter-spacing:0;color:var(--faint)">.cube files</span></div>
+          <div style="padding:2px 14px 6px;display:flex;align-items:center;gap:8px">
+            <span style="font-size:11px;color:var(--muted)">Active:</span>
+            <span id="activeLutName" style="font-size:11px;color:var(--muted)">None</span>
+          </div>
+          <div class="panel-actions" style="border-bottom:0;padding-top:0">
+            <button class="btn" id="importLutBtn" style="flex:1;justify-content:center">Import .cube</button>
+            <button class="btn" id="clearLutBtn" style="flex:1;justify-content:center">Remove LUT</button>
+          </div>
+          <input type="file" id="cubeLutFile" accept=".cube" hidden>
           <div class="mini">Adjust the selected frame, save a look as a preset, then apply it to one frame or the whole batch from the Export dialog.</div>
         </div>
       </div>

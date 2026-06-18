@@ -47,6 +47,8 @@ const DEFAULT_ADJ = {
   hsl:{red:{h:0,s:0,l:0},orange:{h:0,s:0,l:0},yellow:{h:0,s:0,l:0},green:{h:0,s:0,l:0},aqua:{h:0,s:0,l:0},blue:{h:0,s:0,l:0},purple:{h:0,s:0,l:0},magenta:{h:0,s:0,l:0}},
   splitTone:{shadowHue:0,shadowSat:0,highlightHue:0,highlightSat:0,balance:0},
   rgbCurves:{r:[[0,0],[255,255]],g:[[0,0],[255,255]],b:[[0,0],[255,255]]},
+  grain:0,
+  cubeLut:null,
 };
 
 function normalizeAdj(adj){
@@ -54,7 +56,8 @@ function normalizeAdj(adj){
   if(!adj.hsl) adj.hsl=structuredClone(def.hsl);
   if(!adj.splitTone) adj.splitTone=structuredClone(def.splitTone);
   if(!adj.rgbCurves) adj.rgbCurves=structuredClone(def.rgbCurves);
-  ['dehaze','denoiseL','denoiseC','distort','vignette2','vertPersp','horizPersp'].forEach(k=>{ if(adj[k]==null) adj[k]=0; });
+  ['dehaze','denoiseL','denoiseC','distort','vignette2','vertPersp','horizPersp','grain'].forEach(k=>{ if(adj[k]==null) adj[k]=0; });
+  if(adj.cubeLut===undefined) adj.cubeLut=null;
   return adj;
 }
 
@@ -1342,6 +1345,30 @@ $('#exportPresets').onclick=()=>{
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='wildman-presets.json';a.click();
 };
 $('#importPresets').onclick=()=>$('#presetFile').click();
+/* ---- .cube LUT import ---- */
+(function(){
+  const li=document.getElementById('cubeLutFile');
+  if(!li)return;
+  document.getElementById('importLutBtn')&&document.getElementById('importLutBtn').addEventListener('click',()=>li.click());
+  document.getElementById('clearLutBtn')&&document.getElementById('clearLutBtn').addEventListener('click',()=>{
+    const p=sel();if(!p)return;
+    p.adj.cubeLut=null;scheduleSessionSave();scheduleRender();
+    const lb=document.getElementById('activeLutName');if(lb){lb.textContent='None';lb.style.color='var(--muted)';}
+    toast('LUT removed');
+  });
+  li.addEventListener('change',async e=>{
+    const f=e.target.files[0];if(!f)return;
+    const p=sel();if(!p){toast('Select a photo first');li.value='';return;}
+    try{
+      const lut=parseCubeLUT(await f.text());
+      if(!lut){toast('Could not parse .cube file');li.value='';return;}
+      p.adj.cubeLut=lut;scheduleSessionSave();scheduleRender();
+      const lb=document.getElementById('activeLutName');if(lb){lb.textContent=f.name.replace(/\.cube$/i,'');lb.style.color='var(--amber)';}
+      toast('LUT: '+f.name.replace(/\.cube$/i,''));
+    }catch(err){toast('Error reading LUT file');}
+    li.value='';
+  });
+})();
 $('#presetFile').onchange=async e=>{
   const f=e.target.files[0]; if(!f)return;
   try{ const arr=JSON.parse(await f.text());

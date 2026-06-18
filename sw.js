@@ -1,5 +1,5 @@
 /* WildmanDesigns service worker — cache-first, offline-capable */
-const CACHE = 'wildman-v28';
+const CACHE = 'wildman-v29';
 const PRECACHE = [
   './index.html',
   './styles.css',

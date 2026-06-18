@@ -65,6 +65,8 @@ function processImageData(img, adj){
   if(adj.splitTone&&(adj.splitTone.shadowSat||adj.splitTone.highlightSat)) applySplitTone(img,adj);
   if(adj.denoiseL||adj.denoiseC) applyDenoise(img,adj);
   if(adj.rgbCurves) applyRGBCurves(img,adj);
+  if(adj.grain) applyGrain(img,adj);
+  if(adj.cubeLut) applyCubeLUT(img,adj.cubeLut);
   return img;
 }
 
@@ -209,28 +211,89 @@ function applyDenoise(img,adj){
   if(!lv&&!cv)return;
   const {data:d,width:w,height:h}=img;
   const n=w*h;
+  const r=Math.max(1,Math.round(Math.max(lv,cv)*5));
+  const eps=0.04*(1-Math.max(lv,cv)*0.5);
+  // Guided filter: edge-preserving, much better than box blur
+  function guided(src,guide){
+    const mG=separableBoxBlur(guide,w,h,r), mS=separableBoxBlur(src,w,h,r);
+    const g2=new Float32Array(n), gs=new Float32Array(n);
+    for(let i=0;i<n;i++){g2[i]=guide[i]*guide[i]; gs[i]=guide[i]*src[i];}
+    const vG=separableBoxBlur(g2,w,h,r), cGS=separableBoxBlur(gs,w,h,r);
+    const a=new Float32Array(n), b=new Float32Array(n);
+    for(let i=0;i<n;i++){
+      const vv=vG[i]-mG[i]*mG[i], cc=cGS[i]-mG[i]*mS[i];
+      a[i]=cc/(vv+eps); b[i]=mS[i]-a[i]*mG[i];
+    }
+    const mA=separableBoxBlur(a,w,h,r), mB=separableBoxBlur(b,w,h,r);
+    const out=new Float32Array(n);
+    for(let i=0;i<n;i++) out[i]=clamp(mA[i]*guide[i]+mB[i],0,1);
+    return out;
+  }
   if(lv>0){
     const lum=new Float32Array(n);
-    for(let i=0,p=0;i<d.length;i+=4,p++) lum[p]=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2]);
-    const r=Math.max(1,Math.round(lv*3));
-    const blur=separableBoxBlur(lum,w,h,r);
+    for(let i=0,p=0;i<d.length;i+=4,p++) lum[p]=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])/255;
+    const fil=guided(lum,lum);
     for(let p=0,i=0;p<n;p++,i+=4){
-      const ratio=lum[p]>1?blur[p]/lum[p]:1;
-      const t=lv;
+      const ratio=lum[p]>0.001?fil[p]/lum[p]:1, t=lv;
       d[i]  =clamp(d[i]  *((1-t)+t*ratio),0,255);
       d[i+1]=clamp(d[i+1]*((1-t)+t*ratio),0,255);
       d[i+2]=clamp(d[i+2]*((1-t)+t*ratio),0,255);
     }
   }
   if(cv>0){
-    const R=new Float32Array(n),G=new Float32Array(n),B=new Float32Array(n);
-    for(let p=0,i=0;p<n;p++,i+=4){R[p]=d[i];G[p]=d[i+1];B[p]=d[i+2];}
-    const r=Math.max(1,Math.round(cv*3));
-    const bR=separableBoxBlur(R,w,h,r),bG=separableBoxBlur(G,w,h,r),bB=separableBoxBlur(B,w,h,r);
+    const lum=new Float32Array(n),R=new Float32Array(n),G2=new Float32Array(n),B=new Float32Array(n);
+    for(let i=0,p=0;i<d.length;i+=4,p++){
+      lum[p]=(0.299*d[i]+0.587*d[i+1]+0.114*d[i+2])/255;
+      R[p]=d[i]/255; G2[p]=d[i+1]/255; B[p]=d[i+2]/255;
+    }
+    const fR=guided(R,lum), fG=guided(G2,lum), fB=guided(B,lum);
     for(let p=0,i=0;p<n;p++,i+=4){
-      d[i]  =clamp(d[i]  *(1-cv)+bR[p]*cv,0,255);
-      d[i+1]=clamp(d[i+1]*(1-cv)+bG[p]*cv,0,255);
-      d[i+2]=clamp(d[i+2]*(1-cv)+bB[p]*cv,0,255);
+      d[i]  =clamp(d[i]  *(1-cv)+fR[p]*cv*255,0,255);
+      d[i+1]=clamp(d[i+1]*(1-cv)+fG[p]*cv*255,0,255);
+      d[i+2]=clamp(d[i+2]*(1-cv)+fB[p]*cv*255,0,255);
+    }
+  }
+}
+function applyGrain(img,adj){
+  const amt=adj.grain; if(!amt)return;
+  const d=img.data,n=d.length,strength=(amt/100)*35,w=img.width;
+  for(let i=0,p=0;i<n;i+=4,p++){
+    const x=p%w,y=(p/w)|0;
+    let h=((x*1234567+y*7654321)^0xdeadbeef)>>>0;
+    h=(h^(h>>>16))*0x45d9f3b>>>0; h=(h^(h>>>16))>>>0;
+    const noise=((h&0xffff)/65535-0.5)*strength;
+    d[i]=clamp(d[i]+noise,0,255); d[i+1]=clamp(d[i+1]+noise,0,255); d[i+2]=clamp(d[i+2]+noise,0,255);
+  }
+}
+function parseCubeLUT(text){
+  const lines=text.split(/\r?\n/); let size=0; const data=[];
+  for(const raw of lines){
+    const line=raw.trim(); if(!line||line.startsWith('#'))continue;
+    if(line.startsWith('LUT_3D_SIZE')){size=parseInt(line.split(/\s+/)[1]);continue;}
+    if(line.startsWith('DOMAIN_')||line.startsWith('TITLE')||line.startsWith('LUT_1D'))continue;
+    const parts=line.split(/\s+/);
+    if(parts.length>=3){data.push(parseFloat(parts[0]),parseFloat(parts[1]),parseFloat(parts[2]));}
+  }
+  if(!size||data.length!==size*size*size*3)return null;
+  return {size,table:new Float32Array(data)};
+}
+function applyCubeLUT(img,lut){
+  if(!lut||!lut.table)return;
+  const {size,table}=lut,n2=size-1,s2=size*size;
+  const d=img.data;
+  function lerp(a,b,t){return a+(b-a)*t;}
+  for(let i=0;i<d.length;i+=4){
+    const r=d[i]/255,g=d[i+1]/255,b2=d[i+2]/255;
+    const ri=Math.min(r*n2,n2-1e-4),gi=Math.min(g*n2,n2-1e-4),bi=Math.min(b2*n2,n2-1e-4);
+    const r0=ri|0,g0=gi|0,b0=bi|0,r1=r0+1,g1=g0+1,b1=b0+1;
+    const fr=ri-r0,fg=gi-g0,fb=bi-b0;
+    function idx(rr,gg,bb){return(bb*s2+gg*size+rr)*3;}
+    for(let ch=0;ch<3;ch++){
+      d[i+ch]=clamp(lerp(
+        lerp(lerp(table[idx(r0,g0,b0)+ch],table[idx(r1,g0,b0)+ch],fr),
+             lerp(table[idx(r0,g1,b0)+ch],table[idx(r1,g1,b0)+ch],fr),fg),
+        lerp(lerp(table[idx(r0,g0,b1)+ch],table[idx(r1,g0,b1)+ch],fr),
+             lerp(table[idx(r0,g1,b1)+ch],table[idx(r1,g1,b1)+ch],fr),fg),fb)*255,0,255);
     }
   }
 }
