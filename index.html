@@ -2037,42 +2037,93 @@ function renderStage(){
   const pcwF=Math.round(cw*dprDev), pchF=Math.round(ch*dprDev);
   viewCanvas.width=pcw; viewCanvas.height=pch;
   vctx.imageSmoothingEnabled=true; vctx.imageSmoothingQuality='high';
-  vctx.drawImage(p.bitmap, sx,sy,sw,sh, 0,0,pcw,pch);
+  vctx.drawImage(p.bitmap,sx,sy,sw,sh,0,0,pcw,pch);
+
+  const _gid=++_procGen;
+
+  // Shared display update — called after processing (sync or async)
+  function _display(){
+    if(_procGen!==_gid)return;
+    displayCanvas.width=pcwF; displayCanvas.height=pchF;
+    displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
+    displayCtx.imageSmoothingEnabled=true; displayCtx.imageSmoothingQuality='high';
+    displayCtx.drawImage(viewCanvas,0,0,pcwF,pchF);
+    lastRegion={sx,sy,sw,sh,cw,ch};
+    overlay.width=cw; overlay.height=ch; overlay.style.width=cw+'px'; overlay.style.height=ch+'px';
+    drawOverlay(); drawHistogram(p);
+    if(state.compareMode&&!state.showBefore) drawCompareSplit();
+    // Mobile mirror
+    const _mv=document.getElementById('mobEditView');
+    if(window.innerWidth<=768&&_mv&&_mv.classList.contains('active')){
+      const _mobV=document.getElementById('mobView');
+      if(_mobV&&viewCanvas.width>0){
+        const _ap=document.querySelector('.mob-tool-panel.active');
+        const _ph=_ap?Math.min(_ap.scrollHeight||0,Math.round(window.innerHeight*0.5)):0;
+        const _s=Math.min(window.innerWidth/p.w,Math.max(100,window.innerHeight-52-68-_ph)/p.h);
+        const _cw=Math.round(p.w*_s),_ch=Math.round(p.h*_s);
+        _mobV.width=_cw; _mobV.height=_ch;
+        _mobV.style.width=_cw+'px'; _mobV.style.height=_ch+'px';
+        _mobV.getContext('2d').drawImage(viewCanvas,0,0,_cw,_ch);
+      }
+    }
+  }
+
   if(!state.showBefore){
     const img=vctx.getImageData(0,0,pcw,pch);
-    processImageData(img,p.adj);
-    applyMasks(img,p,sx,sy,sw,sh);
-    applySpots(img,p,sx,sy,sw,sh);
-    vctx.putImageData(img,0,0);
-    if(p.adj.distort||p.adj.vignette2) applyLensCorrections(viewCanvas,p.adj);
-    if(p.adj.vertPersp||p.adj.horizPersp) applyPerspective(viewCanvas,p.adj);
-  }
-  displayCanvas.width=pcwF; displayCanvas.height=pchF;
-  displayCanvas.style.width=cw+'px'; displayCanvas.style.height=ch+'px';
-  displayCtx.imageSmoothingEnabled=true; displayCtx.imageSmoothingQuality='high';
-  displayCtx.drawImage(viewCanvas,0,0,pcwF,pchF);
-  lastRegion={sx,sy,sw,sh,cw,ch};
-  overlay.width=cw; overlay.height=ch; overlay.style.width=cw+'px'; overlay.style.height=ch+'px';
-  drawOverlay(); drawHistogram(p);
-  if(state.compareMode&&!state.showBefore) drawCompareSplit();
-  // ── Mobile view mirror: copy processed image to #mobView at correct screen size ──
-  const _mobEV=document.getElementById('mobEditView');
-  if(window.innerWidth<=768&&_mobEV&&_mobEV.classList.contains('active')){
-    const _mobV=document.getElementById('mobView');
-    if(_mobV&&viewCanvas.width>0){
-      const _ap=document.querySelector('.mob-tool-panel.active');
-      const _ph=_ap?Math.min(_ap.scrollHeight||0,Math.round(window.innerHeight*0.5)):0;
-      const _aw=window.innerWidth,_ah=Math.max(100,window.innerHeight-52-68-_ph);
-      const _s=Math.min(_aw/p.w,_ah/p.h);
-      const _cw=Math.round(p.w*_s),_ch=Math.round(p.h*_s);
-      _mobV.width=_cw; _mobV.height=_ch;
-      _mobV.style.width=_cw+'px'; _mobV.style.height=_ch+'px';
-      _mobV.getContext('2d').drawImage(viewCanvas,0,0,_cw,_ch);
+
+    // After processing: apply masks/spots/lens then display
+    function _after(processed){
+      if(_procGen!==_gid)return;
+      applyMasks(processed,p,sx,sy,sw,sh);
+      applySpots(processed,p,sx,sy,sw,sh);
+      vctx.putImageData(processed,0,0);
+      if(p.adj.distort||p.adj.vignette2) applyLensCorrections(viewCanvas,p.adj);
+      if(p.adj.vertPersp||p.adj.horizPersp) applyPerspective(viewCanvas,p.adj);
+      _display();
     }
+
+    if(_procWorker){
+      // ── Async path: transfer pixels to worker, never block main thread ──
+      const xfer=img.data.buffer;
+      _procWorker.onmessage=e=>{
+        if(e.data.id===_gid)_after(new ImageData(new Uint8ClampedArray(e.data.buf),pcw,pch));
+      };
+      _procWorker.postMessage({buf:xfer,w:pcw,h:pch,adj:structuredClone(p.adj),id:_gid},[xfer]);
+      return; // render happens in worker callback
+    }
+    // ── Sync fallback ──
+    processImageData(img,p.adj);
+    _after(img);
+  } else {
+    _display();
   }
 }
 function fitView(){ if(sel()) renderStage(); }
 window.addEventListener('resize',()=>{ clearTimeout(renderTimer); renderTimer=setTimeout(fitView,80); });
+
+/* ============================================================
+   WEB WORKER — processImageData on background thread
+   Build an inline blob worker from the pure pixel-processing functions.
+   Falls back to synchronous processing if Worker creation fails.
+   ============================================================ */
+let _procWorker=null, _procGen=0;
+(function _initProcWorker(){
+  const fns=[clamp,buildLUT,buildChannelLUT,processImageData,convolveDetail,
+    rgb2hsl,hsl2rgb,hslTentWeight,applyHSL,applySplitTone,
+    applyDehaze,separableBoxBlur,applyDenoise,applyRGBCurves];
+  const src='"use strict";\n'+fns.map(f=>f.toString()).join('\n')+`
+self.onmessage=function(ev){
+  const{buf,w,h,adj,id}=ev.data;
+  const img={data:new Uint8ClampedArray(buf),width:w,height:h};
+  processImageData(img,adj);
+  self.postMessage({buf:img.data.buffer,id},[img.data.buffer]);
+};`;
+  try{
+    const blob=new Blob([src],{type:'application/javascript'});
+    _procWorker=new Worker(URL.createObjectURL(blob));
+    _procWorker.onerror=e=>{ console.warn('WW error',e); _procWorker=null; };
+  }catch(e){ console.warn('Worker init failed, using sync fallback'); }
+})();
 function scheduleRender(delay=0){
   clearTimeout(renderTimer);
   if(delay>0){
@@ -2431,7 +2482,7 @@ $$('input[type=range][data-k]').forEach(inp=>{
   inp.addEventListener('input',()=>{
     const p=sel(); if(!p)return;
     const k=inp.dataset.k; p.adj[k]= k==='exposure'?parseFloat(inp.value):parseInt(inp.value);
-    updateValLabel(k); setSliderFill(inp); scheduleRender();
+    updateValLabel(k); setSliderFill(inp); scheduleRender(50);
   });
   setSliderFill(inp);
 });
