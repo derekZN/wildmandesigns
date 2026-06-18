@@ -1,6 +1,17 @@
 /* WildmanDesigns service worker — cache-first, offline-capable */
-const CACHE = 'wildman-v23';
-const PRECACHE = ['./index.html', './manifest.json', './icon.svg'];
+const CACHE = 'wildman-v24';
+const PRECACHE = [
+  './index.html',
+  './styles.css',
+  './engine.js',
+  './worker.js',
+  './idb.js',
+  './app.js',
+  './pwa.js',
+  './mobile.js',
+  './manifest.json',
+  './icon.svg'
+];
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -21,7 +32,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Only handle same-origin GET requests
   if(e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
   if(url.origin !== location.origin) return;
@@ -30,7 +40,6 @@ self.addEventListener('fetch', e => {
     caches.match(e.request).then(cached => {
       if(cached) return cached;
       return fetch(e.request).then(res => {
-        // Cache successful responses for app shell files
         if(res.ok && PRECACHE.some(p => e.request.url.endsWith(p.replace('./', '')))){
           const clone = res.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone));
